@@ -16,7 +16,6 @@
 
 package co.cask.cdap.internal.app.runtime.schedule.store;
 
-import co.cask.cdap.api.app.ApplicationSpecification;
 import co.cask.cdap.api.common.Bytes;
 import co.cask.cdap.api.dataset.DatasetSpecification;
 import co.cask.cdap.api.dataset.lib.AbstractDataset;
@@ -28,23 +27,18 @@ import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Row;
 import co.cask.cdap.api.dataset.table.Scan;
 import co.cask.cdap.api.dataset.table.Scanner;
-import co.cask.cdap.api.schedule.ScheduleSpecification;
 import co.cask.cdap.api.schedule.Trigger;
-import co.cask.cdap.app.store.Store;
 import co.cask.cdap.common.AlreadyExistsException;
 import co.cask.cdap.common.NotFoundException;
 import co.cask.cdap.internal.app.runtime.schedule.ProgramSchedule;
 import co.cask.cdap.internal.app.runtime.schedule.ProgramScheduleMeta;
 import co.cask.cdap.internal.app.runtime.schedule.ProgramScheduleRecord;
 import co.cask.cdap.internal.app.runtime.schedule.ProgramScheduleStatus;
-import co.cask.cdap.internal.app.runtime.schedule.Scheduler;
-import co.cask.cdap.internal.app.runtime.schedule.SchedulerException;
 import co.cask.cdap.internal.app.runtime.schedule.constraint.ConstraintCodec;
 import co.cask.cdap.internal.app.runtime.schedule.trigger.SatisfiableTrigger;
 import co.cask.cdap.internal.app.runtime.schedule.trigger.TriggerCodec;
 import co.cask.cdap.internal.schedule.constraint.Constraint;
 import co.cask.cdap.proto.id.ApplicationId;
-import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.ProgramId;
 import co.cask.cdap.proto.id.ScheduleId;
 import com.google.common.base.Joiner;
@@ -56,7 +50,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -102,15 +95,9 @@ public class ProgramScheduleStoreDataset extends AbstractDataset {
   private static final byte[] TRIGGER_KEY_COLUMN_BYTES = Bytes.toBytes(TRIGGER_KEY_COLUMN);
   private static final byte[] TRIGGER_SEPARATOR_BYTES = Bytes.toBytes("" + TRIGGER_SEPARATOR);
 
-  private static final byte[] MIGRATION_COMPLETE_STATUS_ROW_BYTES = Bytes.toBytes("migration.ns");
-  private static final byte[] MIGRATION_COMPLETE_STATUS_COLUMN_BYTES = Bytes.toBytes("ns");
-  private static final byte[] MIGRATION_COMPLETE_BYTES = Bytes.toBytes("migration.complete=TRUE");
-
   // package visible for the dataset definition
   static final String EMBEDDED_TABLE_NAME = "it"; // indexed table
   static final String INDEX_COLUMNS = TRIGGER_KEY_COLUMN; // trigger key
-  static final MigrationStatus MIGRATION_COMPLETE = new MigrationStatus(true, null);
-  static final MigrationStatus MIGRATION_NOT_STARTED = new MigrationStatus(false, null);
 
   private static final Gson GSON =
     new GsonBuilder()
@@ -124,84 +111,6 @@ public class ProgramScheduleStoreDataset extends AbstractDataset {
                               @EmbeddedDataset(EMBEDDED_TABLE_NAME) IndexedTable store) {
     super(spec.getName(), store);
     this.store = store;
-  }
-
-  /**
-   * Migrate schedules in a given namespace from app metadata store to ProgramScheduleStoreDataset
-   *
-   * @param namespaceId  the namespace with schedules to be migrated
-   * @param appMetaStore app metadata store with schedules to be migrated
-   * @param scheduler the old scheduler to get schedule status from
-   */
-  public void migrateFromAppMetadataStore(NamespaceId namespaceId, Store appMetaStore, Scheduler scheduler) {
-    for (ApplicationSpecification appSpec : appMetaStore.getAllApplications(namespaceId)) {
-      ApplicationId appId = namespaceId.app(appSpec.getName(), appSpec.getAppVersion());
-      for (ScheduleSpecification scheduleSpec : appSpec.getSchedules().values()) {
-        String scheduleName = scheduleSpec.getSchedule().getName();
-        try {
-          ProgramSchedule schedule = Schedulers.toProgramSchedule(appId, scheduleSpec);
-          ProgramId programId = schedule.getProgramId();
-          ProgramScheduleStatus status = scheduler.scheduleState(programId, programId.getType().getSchedulableType(),
-                                                                 schedule.getName());
-          addScheduleWithStatus(schedule, status, System.currentTimeMillis());
-        } catch (AlreadyExistsException e) {
-          // This should never happen since no schedule with the same schedule key should exist before migration
-          LOG.warn("Schedule '{}' in app '{}' already exists before schedule migration. Skipped.",
-                   scheduleName, appId, e);
-        } catch (NotFoundException e) {
-          LOG.warn("Schedule status of '{}' in app '{}' is not found during schedule migration. Skipped.",
-                   scheduleName, appId, e);
-        } catch (SchedulerException e) {
-          LOG.warn("Scheduler exception happens when getting status of '{}' in app '{}' during schedule migration." +
-                     " Skipped.", scheduleName, appId, e);
-        } catch (Exception e) {
-          LOG.error("Unexpected exception happens when migrating schedule '{}' in app '{}'. Skipped.",
-                    scheduleName, appId, e);
-        }
-      }
-    }
-    store.put(MIGRATION_COMPLETE_STATUS_ROW_BYTES, MIGRATION_COMPLETE_STATUS_COLUMN_BYTES,
-              Bytes.toBytes(namespaceId.toString()));
-    LOG.info("Schedule migration is completed for namespace '{}'", namespaceId);
-  }
-
-  /**
-   *
-   */
-  public static class MigrationStatus {
-    private final boolean migrationCompleted;
-    private final NamespaceId lastMigrationCompleteNamespace;
-
-    MigrationStatus(boolean migrationCompleted, @Nullable NamespaceId lastMigrationCompleteNamespace) {
-      this.migrationCompleted = migrationCompleted;
-      this.lastMigrationCompleteNamespace = lastMigrationCompleteNamespace;
-    }
-
-    public boolean isMigrationCompleted() {
-      return migrationCompleted;
-    }
-
-    @Nullable
-    public NamespaceId getLastMigrationCompleteNamespace() {
-      return lastMigrationCompleteNamespace;
-    }
-  }
-
-  public MigrationStatus getMigrationStatus() {
-    Row row = store.get(MIGRATION_COMPLETE_STATUS_ROW_BYTES);
-    if (row.isEmpty()) {
-      return MIGRATION_NOT_STARTED;
-    }
-    byte[] statusBytes = row.get(MIGRATION_COMPLETE_STATUS_COLUMN_BYTES);
-    if (Arrays.equals(MIGRATION_COMPLETE_BYTES, statusBytes)) {
-      return MIGRATION_COMPLETE;
-    }
-    NamespaceId namespace = NamespaceId.fromString(Bytes.toString(statusBytes));
-    return new MigrationStatus(false, namespace);
-  }
-
-  public void setMigrationComplete() {
-    store.put(MIGRATION_COMPLETE_STATUS_ROW_BYTES, MIGRATION_COMPLETE_STATUS_COLUMN_BYTES, MIGRATION_COMPLETE_BYTES);
   }
 
   /**
