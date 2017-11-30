@@ -25,7 +25,6 @@ import co.cask.cdap.internal.app.runtime.schedule.ProgramSchedule;
 import co.cask.cdap.internal.app.runtime.schedule.ProgramScheduleRecord;
 import co.cask.cdap.internal.app.runtime.schedule.trigger.PartitionTrigger;
 import co.cask.cdap.internal.app.runtime.schedule.trigger.ProgramStatusTrigger;
-import co.cask.cdap.internal.app.runtime.schedule.trigger.StreamSizeTrigger;
 import co.cask.cdap.internal.app.runtime.schedule.trigger.TimeTrigger;
 import co.cask.cdap.internal.app.services.http.AppFabricTestBase;
 import co.cask.cdap.internal.schedule.constraint.Constraint;
@@ -154,10 +153,6 @@ public class ProgramScheduleStoreDatasetTest extends AppFabricTestBase {
                                                            ImmutableMap.of("pp", "p"),
                                                            new PartitionTrigger(DS1_ID, 2),
                                                            ImmutableList.<Constraint>of());
-    final ProgramSchedule sched22New = new ProgramSchedule(sched22.getName(), "one streamsize schedule", PROG2_ID,
-                                                           ImmutableMap.of("ss", "s"),
-                                                           new StreamSizeTrigger(NS_ID.stream("stream"), 1),
-                                                           ImmutableList.<Constraint>of());
     final ProgramSchedule sched31New = new ProgramSchedule(sched31.getName(), "program schedule", PROG3_ID,
                                                            ImmutableMap.of("abcd", "efgh"),
                                                            new ProgramStatusTrigger(PROG1_ID, ProgramStatus.FAILED),
@@ -168,7 +163,6 @@ public class ProgramScheduleStoreDatasetTest extends AppFabricTestBase {
       public void apply() throws Exception {
         store.updateSchedule(sched11New);
         store.updateSchedule(sched12New);
-        store.updateSchedule(sched22New);
         store.updateSchedule(sched31New);
       }
     });
