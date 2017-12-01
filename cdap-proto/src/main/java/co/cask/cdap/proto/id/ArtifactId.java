@@ -16,7 +16,6 @@
 package co.cask.cdap.proto.id;
 
 import co.cask.cdap.api.artifact.ArtifactVersion;
-import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.element.EntityType;
 
 import java.util.Arrays;
@@ -116,11 +115,6 @@ public class ArtifactId extends NamespacedEntityId implements ParentedId<Namespa
       this.hashCode = hashCode = Objects.hash(super.hashCode(), namespace, artifact, version);
     }
     return hashCode;
-  }
-
-  @Override
-  public Id.Artifact toId() {
-    return Id.Artifact.from(Id.Namespace.from(namespace), artifact, version);
   }
 
   @SuppressWarnings("unused")

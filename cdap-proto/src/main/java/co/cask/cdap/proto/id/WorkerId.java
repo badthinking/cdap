@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Cask Data, Inc.
+ * Copyright © 2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -19,18 +19,23 @@ package co.cask.cdap.proto.id;
 import co.cask.cdap.proto.ProgramType;
 
 /**
- * Uniquely identifies a workflow.
+ * Uniquely identifies a worker.
  */
-public class WorkflowId extends ProgramId implements ParentedId<ApplicationId> {
-  public WorkflowId(String namespace, String application, String program) {
-    super(namespace, application, ProgramType.WORKFLOW, program);
+public class WorkerId extends ProgramId implements ParentedId<ApplicationId> {
+  public WorkerId(String namespace, String application, String program) {
+    super(namespace, application, ProgramType.WORKER, program);
   }
 
-  public WorkflowId(ApplicationId appId, String program) {
-    super(appId, ProgramType.WORKFLOW, program);
+  public WorkerId(ApplicationId appId, String program) {
+    super(appId, ProgramType.WORKER, program);
   }
 
-  public static WorkflowId fromString(String string) {
-    return EntityId.fromString(string, WorkflowId.class);
+  public WorkerId(ProgramId programId) {
+    super(programId.getParent(), ProgramType.WORKER, programId.getEntityName());
   }
+
+  public static WorkerId fromString(String string) {
+    return EntityId.fromString(string, WorkerId.class);
+  }
+
 }

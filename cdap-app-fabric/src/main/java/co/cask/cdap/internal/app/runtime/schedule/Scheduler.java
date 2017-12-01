@@ -24,7 +24,6 @@ import co.cask.cdap.proto.ScheduledRuntime;
 import co.cask.cdap.proto.id.ProgramId;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Interfaces that defines all methods related to scheduling, un-scheduling jobs.

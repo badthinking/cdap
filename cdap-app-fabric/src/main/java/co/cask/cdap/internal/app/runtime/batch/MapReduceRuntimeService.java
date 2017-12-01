@@ -33,6 +33,7 @@ import co.cask.cdap.api.stream.StreamEventDecoder;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.CConfigurationUtil;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.id.Id;
 import co.cask.cdap.common.io.Locations;
 import co.cask.cdap.common.lang.ClassLoaders;
 import co.cask.cdap.common.lang.jar.BundleJarUtil;
@@ -59,7 +60,6 @@ import co.cask.cdap.internal.app.runtime.batch.distributed.MapReduceContainerLau
 import co.cask.cdap.internal.app.runtime.batch.stream.MapReduceStreamInputFormat;
 import co.cask.cdap.internal.app.runtime.batch.stream.StreamInputFormatProvider;
 import co.cask.cdap.internal.app.runtime.distributed.LocalizeResource;
-import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.ProgramType;
 import co.cask.cdap.proto.id.ProgramId;
 import co.cask.cdap.proto.id.StreamId;
@@ -526,7 +526,6 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
   }
 
   /**
-   * For pre 3.5 MapReduce programs, calls the {@link MapReduce#beforeSubmit(MapReduceContext)} method.
    * For MapReduce programs created after 3.5, calls the initialize method of the {@link ProgramLifecycle}.
    * This method also sets up the Input/Output within the same transaction.
    */
@@ -826,7 +825,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
   }
 
   private String getJobName(BasicMapReduceContext context) {
-    Id.Program programId = context.getProgram().getId().toId();
+    Id.Program programId = Id.Program.fromEntityId(context.getProgram().getId());
     // MRJobClient expects the following format (for RunId to be the first component)
     return String.format("%s.%s.%s.%s.%s",
                          context.getRunId().getId(), ProgramType.MAPREDUCE.name().toLowerCase(),

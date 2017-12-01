@@ -30,11 +30,11 @@ import co.cask.cdap.api.plugin.PluginPropertyField;
 import co.cask.cdap.common.ArtifactAlreadyExistsException;
 import co.cask.cdap.common.ArtifactNotFoundException;
 import co.cask.cdap.common.conf.CConfiguration;
+import co.cask.cdap.common.id.Id;
 import co.cask.cdap.internal.AppFabricTestHelper;
 import co.cask.cdap.internal.app.runtime.artifact.app.inspection.InspectionApp;
 import co.cask.cdap.internal.app.runtime.plugin.PluginNotExistsException;
 import co.cask.cdap.internal.io.ReflectionSchemaGenerator;
-import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.artifact.ArtifactSortOrder;
 import co.cask.cdap.proto.id.ArtifactId;
 import co.cask.cdap.proto.id.Ids;
@@ -111,7 +111,7 @@ public class ArtifactStoreTest {
 
     // no artifact by namespace, artifact name, and version should throw an exception
     try {
-      artifactStore.getArtifact(Id.Artifact.from(namespace.toId(), "something", "1.0.0"));
+      artifactStore.getArtifact(Id.Artifact.from(Id.Namespace.fromEntityId(namespace), "something", "1.0.0"));
       Assert.fail();
     } catch (ArtifactNotFoundException e) {
       // expected
@@ -376,14 +376,14 @@ public class ArtifactStoreTest {
       new PluginClass("atype", "plugin1", "", "c.c.c.plugin1", "cfg", ImmutableMap.<String, PluginPropertyField>of());
     // write a plugins artifact in namespace1
     NamespaceId namespace1 = Ids.namespace("ns1");
-    Id.Artifact artifact1 = Id.Artifact.from(namespace1.toId(), "plugins1", "1.0.0");
+    Id.Artifact artifact1 = Id.Artifact.from((Id.Namespace.fromEntityId(namespace1)), "plugins1", "1.0.0");
     ArtifactMeta meta1 = new ArtifactMeta(ArtifactClasses.builder().addPlugin(plugin).build(), usableBy);
     String contents1 = "plugin1 contents";
     writeArtifact(artifact1, meta1, contents1);
 
     // write a plugins artifact in namespace2
     NamespaceId namespace2 = Ids.namespace("ns2");
-    Id.Artifact artifact2 = Id.Artifact.from(namespace2.toId(), "plugins2", "1.0.0");
+    Id.Artifact artifact2 = Id.Artifact.from(Id.Namespace.fromEntityId(namespace2), "plugins2", "1.0.0");
     ArtifactMeta meta2 = new ArtifactMeta(ArtifactClasses.builder().addPlugin(plugin).build(), usableBy);
     String contents2 = "plugin2 contents";
     writeArtifact(artifact2, meta2, contents2);

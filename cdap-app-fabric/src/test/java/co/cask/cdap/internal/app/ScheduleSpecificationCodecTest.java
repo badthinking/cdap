@@ -19,7 +19,6 @@ package co.cask.cdap.internal.app;
 import co.cask.cdap.api.app.AbstractApplication;
 import co.cask.cdap.api.app.Application;
 import co.cask.cdap.api.app.ApplicationSpecification;
-import co.cask.cdap.api.app.ProgramType;
 import co.cask.cdap.api.schedule.SchedulableProgramType;
 import co.cask.cdap.api.schedule.Schedule;
 import co.cask.cdap.api.schedule.ScheduleSpecification;

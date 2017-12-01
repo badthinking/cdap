@@ -20,14 +20,12 @@ import co.cask.cdap.api.app.Application;
 import co.cask.cdap.client.app.AllProgramsApp;
 import co.cask.cdap.client.common.ClientTestBase;
 import co.cask.cdap.client.config.ConnectionConfig;
-import co.cask.cdap.common.utils.Tasks;
+import co.cask.cdap.common.id.EntityIdCompatible;
 import co.cask.cdap.gateway.handlers.UsageHandler;
 import co.cask.cdap.proto.ProgramRunStatus;
-import co.cask.cdap.proto.ProgramStatus;
 import co.cask.cdap.proto.id.ApplicationId;
 import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.EntityId;
-import co.cask.cdap.proto.id.EntityIdCompatible;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.ProgramId;
 import co.cask.cdap.proto.id.StreamId;
@@ -50,8 +48,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for {@link co.cask.cdap.gateway.handlers.UsageHandler}

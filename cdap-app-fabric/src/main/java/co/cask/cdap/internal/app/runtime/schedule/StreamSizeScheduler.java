@@ -26,6 +26,7 @@ import co.cask.cdap.common.AlreadyExistsException;
 import co.cask.cdap.common.NotFoundException;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.id.Id;
 import co.cask.cdap.common.stream.notification.StreamSizeNotification;
 import co.cask.cdap.internal.app.runtime.ProgramOptionConstants;
 import co.cask.cdap.internal.app.runtime.schedule.store.DatasetBasedStreamSizeScheduleStore;
@@ -35,7 +36,6 @@ import co.cask.cdap.messaging.MessagingService;
 import co.cask.cdap.notifications.service.NotificationContext;
 import co.cask.cdap.notifications.service.NotificationHandler;
 import co.cask.cdap.notifications.service.NotificationService;
-import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.Notification;
 import co.cask.cdap.proto.ScheduledRuntime;
 import co.cask.cdap.proto.id.NamespaceId;
@@ -378,7 +378,7 @@ public class StreamSizeScheduler implements Scheduler {
     StreamId streamId = new StreamId(program.getNamespace(), streamSizeSchedule.getStreamName());
     StreamSubscriber streamSubscriber = streamSubscribers.get(streamId);
     if (streamSubscriber == null) {
-      streamSubscriber = new StreamSubscriber(streamId.toId());
+      streamSubscriber = new StreamSubscriber(Id.Stream.fromEntityId(streamId));
       StreamSubscriber previous = streamSubscribers.putIfAbsent(streamId, streamSubscriber);
       if (previous == null) {
         streamSubscriber.startAndWait();
