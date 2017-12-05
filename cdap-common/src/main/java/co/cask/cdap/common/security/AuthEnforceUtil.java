@@ -29,16 +29,14 @@ import co.cask.cdap.security.spi.authentication.AuthenticationContext;
 import co.cask.cdap.security.spi.authorization.AuthorizationEnforcer;
 import co.cask.cdap.security.spi.authorization.UnauthorizedException;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Class used by {@link AuthEnforceRewriter} to rewrite classes with {@link AuthEnforce} annotation and call
@@ -57,7 +55,7 @@ public final class AuthEnforceUtil {
   private static final Map<Class<? extends EntityId>, Constructor<? extends EntityId>> CONS_CACHE;
 
   static {
-    CONS_CACHE = new ConcurrentHashMap<>();
+    CONS_CACHE = new IdentityHashMap<>();
     CONS_CACHE.put(InstanceId.class, findConstructor(InstanceId.class));
     CONS_CACHE.put(NamespaceId.class, findConstructor(NamespaceId.class));
     CONS_CACHE.put(StreamId.class, findConstructor(StreamId.class));
@@ -115,24 +113,29 @@ public final class AuthEnforceUtil {
   static int getEntityIdPartsCount(Type enforceOn) {
     if (enforceOn.equals(Type.getType(InstanceId.class))) {
       return CONS_CACHE.get(InstanceId.class).getParameterTypes().length;
-    } else if (enforceOn.equals(Type.getType(NamespaceId.class))) {
-      return CONS_CACHE.get(NamespaceId.class).getParameterTypes().length;
-    } else if (enforceOn.equals(Type.getType(StreamId.class))) {
-      return CONS_CACHE.get(StreamId.class).getParameterTypes().length;
-    } else if (enforceOn.equals(Type.getType(DatasetId.class))) {
-      return CONS_CACHE.get(DatasetId.class).getParameterTypes().length;
-    } else if (enforceOn.equals(Type.getType(ApplicationId.class))) {
-      return CONS_CACHE.get(ApplicationId.class).getParameterTypes().length;
-    } else if (enforceOn.equals(Type.getType(ArtifactId.class))) {
-      return CONS_CACHE.get(ArtifactId.class).getParameterTypes().length;
-    } else if (enforceOn.equals(Type.getType(ProgramId.class))) {
-      return CONS_CACHE.get(ProgramId.class).getParameterTypes().length;
-    } else {
-      throw new IllegalArgumentException(String.format("Failed to determine required number of entity parts " +
-                                                         "needed for %s. Please make sure its a valid %s class " +
-                                                         "for authorization enforcement",
-                                                       enforceOn.getClassName(), EntityId.class.getSimpleName()));
     }
+    if (enforceOn.equals(Type.getType(NamespaceId.class))) {
+      return CONS_CACHE.get(NamespaceId.class).getParameterTypes().length;
+    }
+    if (enforceOn.equals(Type.getType(StreamId.class))) {
+      return CONS_CACHE.get(StreamId.class).getParameterTypes().length;
+    }
+    if (enforceOn.equals(Type.getType(DatasetId.class))) {
+      return CONS_CACHE.get(DatasetId.class).getParameterTypes().length;
+    }
+    if (enforceOn.equals(Type.getType(ApplicationId.class))) {
+      return CONS_CACHE.get(ApplicationId.class).getParameterTypes().length;
+    }
+    if (enforceOn.equals(Type.getType(ArtifactId.class))) {
+      return CONS_CACHE.get(ArtifactId.class).getParameterTypes().length;
+    }
+    if (enforceOn.equals(Type.getType(ProgramId.class))) {
+      return CONS_CACHE.get(ProgramId.class).getParameterTypes().length;
+    }
+    throw new IllegalArgumentException(String.format("Failed to determine required number of entity parts " +
+                                                       "needed for %s. Please make sure its a valid %s class " +
+                                                       "for authorization enforcement",
+                                                     enforceOn.getClassName(), EntityId.class.getSimpleName()));
   }
 
   private static EntityId createEntityId(Class<? extends EntityId> entityClass, Object[] args)
@@ -147,17 +150,11 @@ public final class AuthEnforceUtil {
   }
 
   private static Constructor<? extends EntityId> findConstructor(Class<? extends EntityId> entityClass) {
-    Constructor<? extends EntityId> constructor = null;
     // Find the constructor with all String parameters
     for (Constructor<?> curConstructor : entityClass.getConstructors()) {
-      if (Iterables.all(Arrays.asList(curConstructor.getParameterTypes()),
-                        Predicates.<Class<?>>equalTo(String.class))) {
-        constructor = (Constructor<? extends EntityId>) curConstructor;
-        break;
+      if (Arrays.stream(curConstructor.getParameterTypes()).allMatch(String.class::equals)) {
+        return (Constructor<? extends EntityId>) curConstructor;
       }
-    }
-    if (constructor != null) {
-      return constructor;
     }
     // since constructor was not found throw an exception
     throw new IllegalStateException(String.format("Failed to find constructor for %s whose parameters are only of " +

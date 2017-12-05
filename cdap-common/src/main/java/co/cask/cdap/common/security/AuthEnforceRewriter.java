@@ -50,6 +50,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
@@ -135,6 +136,7 @@ public class AuthEnforceRewriter implements ClassRewriter {
                     Type.getType(PathParam.class).getDescriptor());
 
   @Override
+  @Nullable
   public byte[] rewriteClass(String className, InputStream input) throws IOException {
     byte[] classBytes = ByteStreams.toByteArray(input);
     // First pass: Check the class to have a method with AuthEnforce annotation if found store the annotation details
@@ -151,7 +153,7 @@ public class AuthEnforceRewriter implements ClassRewriter {
     Map<Method, AnnotationDetail> methodAnnotations = classVisitor.getMethodAnnotations();
     if (methodAnnotations.isEmpty()) {
       // if no AuthEnforce annotation was found then return the original class bytes
-      return classBytes;
+      return null;
     }
     // We found some method which has AuthEnforce annotation so we need a second pass in to rewrite the class
     // in second pass we COMPUTE_FRAMES and visit classes with EXPAND_FRAMES
@@ -228,28 +230,25 @@ public class AuthEnforceRewriter implements ClassRewriter {
 
         @Override
         public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
-          if (!(authEnforceAnnotationNode != null && visible && (SUPPORTED_PARAMETER_ANNOTATIONS.contains(desc)))) {
+          if (!(authEnforceAnnotationNode != null && visible && SUPPORTED_PARAMETER_ANNOTATIONS.contains(desc))) {
             return null;
           }
           // Since AuthEnforce annotation was used on this method then look for parameters with named annotation and
           // store their position.
           // decide on a precedence order.
-          AnnotationNode annotationNode = new AnnotationNode(desc);
           // store the parameter position and its type with annotation detail
-          ParameterDetail parameterDetail = new ParameterDetail(parameterTypes[parameter], annotationNode);
-          if (parameterDetails.containsKey(parameter)) {
-            // we already stored some annotation for this parameter update it if the current one is Name annotation
-            // as its preferred
-            if (Name.class.getName().equals(Type.getType(desc).getClassName())) {
-              LOG.debug("Updating parameter details for parameter at position '{}' for method '{}' in class '{}' " +
-                          "from {}' to '{}'. Since %s is preferred annotation.", parameter, methodName, className,
-                        parameterDetails.get(parameter), parameterDetail);
-              parameterDetails.put(parameter, parameterDetail);
-            }
-          } else {
-            parameterDetails.put(parameter, parameterDetail);
+          ParameterDetail parameterDetail = new ParameterDetail(parameterTypes[parameter], new AnnotationNode(desc));
+          if (parameterDetails.putIfAbsent(parameter, parameterDetail) == null) {
+            return parameterDetail.getAnnotationNode();
           }
-          return annotationNode;
+          if (Name.class.getName().equals(Type.getType(desc).getClassName())) {
+            LOG.debug("Updating parameter details for parameter at position '{}' for method '{}' in class '{}' " +
+                        "from {}' to '{}'. Since %s is preferred annotation.", parameter, methodName, className,
+                      parameterDetails.get(parameter), parameterDetail);
+            parameterDetails.put(parameter, parameterDetail);
+            return parameterDetail.getAnnotationNode();
+          }
+          return null;
         }
 
         // This is called at the end of visiting method. Here if the method has AuthEnforce annotation then we
@@ -261,42 +260,34 @@ public class AuthEnforceRewriter implements ClassRewriter {
             return;
           }
           AuthEnforceAnnotationNodeProcessor nodeProcessor =
-                  new AuthEnforceAnnotationNodeProcessor(authEnforceAnnotationNode);
-          Map<String, Integer> paramPositions = processParameterAnnotationNode(parameterDetails);
+            new AuthEnforceAnnotationNodeProcessor(authEnforceAnnotationNode);
+          Map<String, Integer> paramPositions = processParameterDetails(parameterDetails);
 
           List<EntityPartDetail> entityPartDetails = new ArrayList<>();
           for (String name : nodeProcessor.getEntities()) {
             // just need to check for empty string since it cannot be null as that will be a compilation error
             Preconditions.checkArgument(!name.isEmpty(), "Found an empty string in entity parts of annotation %s on " +
               "method %s in class %s", nodeProcessor, methodName, className);
-            // Make sure that the entities specified in the AuthEnforce annotation are found in method parameters
-            // or class fields. Its fine if they exist at both places in that case we will give preference to
-            // method parameters unless its been specified with this. in that case its always looked in class field.
-            EntityPartDetail entityPart;
-            // if the name starts with this we will give preference to class field since its possible to annotate a
-            // method parameter with this.something
-            if (name.startsWith("this.")) {
-              String fieldName = getFieldName(name);
-              entityPart = new EntityPartDetail(fieldName, true);
-            } else {
-              // preference to method parameters
-              if (paramPositions.containsKey(name)) {
-                entityPart = new EntityPartDetail(name, false);
-              } else if (fieldDetails.containsKey(name)) {
-                entityPart = new EntityPartDetail(name, true);
-              } else {
-                // Didn't find a named method parameter or class field for the given entity name
-                throw new IllegalArgumentException(String.format("No named method parameter or a class field found " +
-                                "with name '%s' in class '%s' for method '%s' whereas " +
-                                "it was specified in '%s' annotation", name,
-                        className, methodName,
-                        AuthEnforce.class.getSimpleName()));
-              }
+            if (paramPositions.containsKey(name)) {   // Param name cannot have ".", so it won't have "this."
+              // if it matches
+              entityPartDetails.add(new EntityPartDetail(name, false,
+                                                         parameterDetails.get(paramPositions.get(name))
+                                                           .getParameterType()));
+              continue;
             }
-            entityPartDetails.add(entityPart);
+            name = name.startsWith("this.") ? name.substring("this.".length()) : name;
+            if (!fieldDetails.containsKey(name)) {
+              // Didn't find a named method parameter or class field for the given entity name
+              throw new IllegalArgumentException(String.format("No named method parameter or a class field found " +
+                                                                 "with name '%s' in class '%s' for method '%s' " +
+                                                                 "whereas it was specified in '%s' annotation", name,
+                                                               className, methodName,
+                                                               AuthEnforce.class.getSimpleName()));
+            }
+            entityPartDetails.add(new EntityPartDetail(name, true, fieldDetails.get(name)));
           }
           // verify that the entity parts specified in annotation is valid to do enforcement on the given enforceOn
-          verifyEntityParts(entityPartDetails, nodeProcessor.getEnforceOn(), parameterDetails, paramPositions);
+          verifyEntityParts(entityPartDetails, nodeProcessor.getEnforceOn());
           // Store all the information properly for the second pass
           methodAnnotations.put(new Method(methodName, methodDesc),
                                 new AnnotationDetail(entityPartDetails, nodeProcessor.getEnforceOn(),
@@ -305,10 +296,10 @@ public class AuthEnforceRewriter implements ClassRewriter {
 
         /** Helper Methods **/
 
-        private void verifyEntityParts(List<EntityPartDetail> entityPartDetails, Type enforceOn,
-                                       Map<Integer, ParameterDetail> parameterAnnotationNode,
-                                       Map<String, Integer> paramAnnotation) {
-          Type entityPartType = getEntityPartType(parameterAnnotationNode, paramAnnotation, entityPartDetails.get(0));
+        private void verifyEntityParts(List<EntityPartDetail> entityPartDetails, Type enforceOn) {
+          Preconditions.checkArgument(entityPartDetails.size() > 0, "Entity Details for the annotation cannot be " +
+            "empty");
+          Type entityPartType = entityPartDetails.get(0).getType();
           // if the first entity part is not string then it should be of same type specified in enforce on
           // TODO: Later change this to even work with parent type as we will support enforceOn parent type
           if (!entityPartType.equals(Type.getType(String.class))) {
@@ -321,7 +312,7 @@ public class AuthEnforceRewriter implements ClassRewriter {
             // EntityId creation
             // verify that all parts are of type string
             for (EntityPartDetail entityPartDetail : entityPartDetails) {
-              entityPartType = getEntityPartType(parameterAnnotationNode, paramAnnotation, entityPartDetail);
+              entityPartType = entityPartDetail.getType();
               Preconditions.checkArgument(entityPartType.equals(Type.getType(String.class)),
                                           "Found part %s of type %s in a multiple part entity specification of " +
                                             "AuthEnforce. Only String is supported in multiple parts.",
@@ -334,12 +325,6 @@ public class AuthEnforceRewriter implements ClassRewriter {
                                         methodName, className, enforceOn, requiredSize, enforceOn.getClassName());
 
           }
-        }
-
-        private Type getEntityPartType(Map<Integer, ParameterDetail> parameterAnnotationNode,
-                                       Map<String, Integer> paramAnnotation, EntityPartDetail entityPartDetail) {
-          return entityPartDetail.isField() ? fieldDetails.get(entityPartDetail.getEntityName()) :
-            parameterAnnotationNode.get(paramAnnotation.get(entityPartDetail.getEntityName())).getParameterType();
         }
       };
     }
@@ -367,14 +352,12 @@ public class AuthEnforceRewriter implements ClassRewriter {
     private final Map<Method, AnnotationDetail> methodAnnotations;
     private final String authenticationContextFieldName;
     private final String authorizationEnforcerFieldName;
-    private final Map<String, Type> fieldDetails;
 
     AuthEnforceAnnotationRewriter(String className, ClassWriter cw, Map<String, Type> fieldDetails,
                                   Map<Method, AnnotationDetail> methodAnnotations) {
       super(Opcodes.ASM5, cw);
       this.className = className;
       this.classType = Type.getObjectType(className.replace(".", "/"));
-      this.fieldDetails = fieldDetails;
       this.methodAnnotations = methodAnnotations;
       this.authenticationContextFieldName = generateUniqueFieldName(AUTHENTICATION_CONTEXT_FIELD_NAME);
       this.authorizationEnforcerFieldName = generateUniqueFieldName(AUTHORIZATION_ENFORCER_FIELD_NAME);
@@ -416,11 +399,11 @@ public class AuthEnforceRewriter implements ClassRewriter {
             if (entityPart.isField()) {
               // load class field
               loadThis();
-              getField(classType, entityPart.getEntityName(), fieldDetails.get(entityPart.getEntityName()));
+              getField(classType, entityPart.getEntityName(), entityPart.getType());
             } else {
               // load method parameter
               loadArg(annotationDetail.getParameterAnnotation().get(
-                      annotationDetail.getEntities().get(i).getEntityName()));
+                annotationDetail.getEntities().get(i).getEntityName()));
             }
             arrayStore(Type.getType(Object.class));
           }
@@ -502,22 +485,22 @@ public class AuthEnforceRewriter implements ClassRewriter {
   /**
    * Process {@link AnnotationNode} information collected on a method parameters
    *
-   * @param parameterAnnotationNode a {@link Map} of parameter position and annotation details of that parameter
+   * @param paramDetails a {@link Map} of parameter position and annotation details of that parameter
    * @return a new {@link Map} where the key is the parameter name given in the annotation and value is the
    * position of the parameter.
    */
-  private static Map<String, Integer> processParameterAnnotationNode(Map<Integer, ParameterDetail>
-                                                                       parameterAnnotationNode) {
+  private static Map<String, Integer> processParameterDetails(Map<Integer, ParameterDetail>
+                                                                paramDetails) {
     Map<String, Integer> parameterAnnotation = new HashMap<>();
-    for (Map.Entry<Integer, ParameterDetail> entry : parameterAnnotationNode.entrySet()) {
+    for (Map.Entry<Integer, ParameterDetail> entry : paramDetails.entrySet()) {
       // the AnnotationNode of parameter will be an array of size 2 where 0 is "value" and 1 is the name provided in
       // the annotation.
       String paraName = (String) entry.getValue().getAnnotationNode().values.get(1);
       int position = entry.getKey();
       // if we have already seen a parameter named with this annotation then decide the preferred parameter if possible
       if (parameterAnnotation.containsKey(paraName)) {
-        position = getPreferredParameter(parameterAnnotationNode.get(parameterAnnotation.get(paraName)),
-                parameterAnnotation.get(paraName), entry.getValue(), entry.getKey());
+        position = getPreferredParameter(paramDetails.get(parameterAnnotation.get(paraName)),
+                                         parameterAnnotation.get(paraName), entry.getValue(), entry.getKey());
 
       }
       // store the parameter position with this name
@@ -643,10 +626,12 @@ public class AuthEnforceRewriter implements ClassRewriter {
   private static final class EntityPartDetail {
     private final String entityName;
     private final boolean isField;
+    private final Type type;
 
-    EntityPartDetail(String entityName, boolean isField) {
+    EntityPartDetail(String entityName, boolean isField, Type type) {
       this.entityName = entityName;
       this.isField = isField;
+      this.type = type;
     }
 
     String getEntityName() {
@@ -655,6 +640,10 @@ public class AuthEnforceRewriter implements ClassRewriter {
 
     boolean isField() {
       return isField;
+    }
+
+    public Type getType() {
+      return type;
     }
   }
 
@@ -677,18 +666,5 @@ public class AuthEnforceRewriter implements ClassRewriter {
     AnnotationNode getAnnotationNode() {
       return annotationNode;
     }
-  }
-
-  /**
-   * Return the field name without "this." if the given field name starts with it
-   *
-   * @param fieldNameWithThis the field name which starts with this.
-   * @return the field name without this.
-   */
-  private static String getFieldName(String fieldNameWithThis) {
-    Preconditions.checkArgument(fieldNameWithThis.startsWith("this."), String.format("The given field name %s does " +
-                                                                                       "not start with 'this.'",
-                                                                                     fieldNameWithThis));
-    return fieldNameWithThis.substring(fieldNameWithThis.lastIndexOf(".") + 1);
   }
 }
