@@ -42,6 +42,7 @@ import co.cask.cdap.pipeline.Context;
 import co.cask.cdap.pipeline.Pipeline;
 import co.cask.cdap.pipeline.PipelineFactory;
 import co.cask.cdap.pipeline.Stage;
+import co.cask.cdap.scheduler.Scheduler;
 import co.cask.cdap.security.impersonation.Impersonator;
 import co.cask.cdap.security.impersonation.OwnerAdmin;
 import co.cask.cdap.security.spi.authentication.AuthenticationContext;
@@ -94,7 +95,7 @@ public class LocalApplicationManager<I, O> implements Manager<I, O> {
                           UsageRegistry usageRegistry, ArtifactRepository artifactRepository,
                           MetadataStore metadataStore,
                           Impersonator impersonator, AuthenticationContext authenticationContext,
-                          co.cask.cdap.scheduler.Scheduler programScheduler,
+                          Scheduler programScheduler,
                           AuthorizationEnforcer authorizationEnforcer) {
     this.configuration = configuration;
     this.pipelineFactory = pipelineFactory;

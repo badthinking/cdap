@@ -35,7 +35,7 @@ import co.cask.cdap.internal.app.runtime.schedule.ProgramSchedule;
 import co.cask.cdap.internal.app.runtime.schedule.ProgramScheduleRecord;
 import co.cask.cdap.internal.app.runtime.schedule.ProgramScheduleStatus;
 import co.cask.cdap.internal.app.runtime.schedule.SchedulerException;
-import co.cask.cdap.internal.app.runtime.schedule.SchedulerService;
+import co.cask.cdap.internal.app.runtime.schedule.TimeSchedulerService;
 import co.cask.cdap.internal.app.runtime.schedule.queue.Job;
 import co.cask.cdap.internal.app.runtime.schedule.queue.JobQueueDataset;
 import co.cask.cdap.internal.app.runtime.schedule.store.ProgramScheduleStoreDataset;
@@ -71,11 +71,11 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
   private final Service internalService;
   private final AtomicBoolean schedulerStarted;
   private final DatasetFramework datasetFramework;
-  private final SchedulerService scheduler;
+  private final TimeSchedulerService timeSchedulerService;
 
   @Inject
   CoreSchedulerService(TransactionSystemClient txClient, final DatasetFramework datasetFramework,
-                       final SchedulerService schedulerService,
+                       final TimeSchedulerService timeSchedulerService,
                        final ScheduleNotificationSubscriberService scheduleNotificationSubscriberService,
                        final ConstraintCheckerService constraintCheckerService) {
     this.datasetFramework = datasetFramework;
@@ -86,7 +86,7 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
     this.transactional = Transactions.createTransactionalWithRetry(
       Transactions.createTransactional(datasetCache), RetryStrategies.retryOnConflict(10, 100L));
 
-    this.scheduler = schedulerService;
+    this.timeSchedulerService = timeSchedulerService;
     this.schedulerStarted = new AtomicBoolean();
     // Use a retry on failure service to make it resilience to transient service unavailability during startup
     this.internalService = new RetryOnStartFailureService(() -> new AbstractIdleService() {
@@ -96,7 +96,7 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
           datasetFramework.addInstance(Schedulers.STORE_TYPE_NAME,
                                        Schedulers.STORE_DATASET_ID, DatasetProperties.EMPTY);
         }
-        schedulerService.startAndWait();
+        timeSchedulerService.startAndWait();
         cleanupJobs();
         constraintCheckerService.startAndWait();
         scheduleNotificationSubscriberService.startAndWait();
@@ -108,7 +108,7 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
       protected void shutDown() throws Exception {
         scheduleNotificationSubscriberService.stopAndWait();
         constraintCheckerService.stopAndWait();
-        schedulerService.stopAndWait();
+        timeSchedulerService.stopAndWait();
         LOG.info("Stopped core scheduler service.");
       }
     }, co.cask.cdap.common.service.RetryStrategies.exponentialDelay(200, 5000, TimeUnit.MILLISECONDS));
@@ -177,7 +177,7 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
       for (ProgramSchedule schedule : schedules) {
         try {
           // TODO: [CDAP-11576] need to clean up the inconsistent state if this operation fails
-          scheduler.addProgramSchedule(schedule);
+          timeSchedulerService.addProgramSchedule(schedule);
         } catch (SchedulerException e) {
           // TODO: [CDAP-11574] temporarily catch the SchedulerException and throw RuntimeException.
           // Need better error handling
@@ -223,7 +223,7 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
         if (ProgramScheduleStatus.SUSPENDED != record.getMeta().getStatus()) {
           throw new ConflictException("Schedule '" + scheduleId + "' is already enabled");
         }
-        scheduler.resumeProgramSchedule(record.getSchedule());
+        timeSchedulerService.resumeProgramSchedule(record.getSchedule());
         store.updateScheduleStatus(scheduleId, ProgramScheduleStatus.SCHEDULED);
         return null;
       }, Exception.class);
@@ -246,7 +246,7 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
         if (ProgramScheduleStatus.SCHEDULED != record.getMeta().getStatus()) {
           throw new ConflictException("Schedule '" + scheduleId + "' is already disabled");
         }
-        scheduler.suspendProgramSchedule(record.getSchedule());
+        timeSchedulerService.suspendProgramSchedule(record.getSchedule());
         store.updateScheduleStatus(scheduleId, ProgramScheduleStatus.SUSPENDED);
         queue.markJobsForDeletion(scheduleId, System.currentTimeMillis());
         return null;
@@ -270,7 +270,7 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
     for (ProgramSchedule schedule : schedules) {
       try {
         // TODO: [CDAP-11576] need to clean up the inconsistent state if this operation fails
-        scheduler.deleteProgramSchedule(schedule);
+        timeSchedulerService.deleteProgramSchedule(schedule);
       } catch (Exception e) {
         // TODO: [CDAP-11574] temporarily catch the SchedulerException and throw RuntimeException.
         // Need better error handling
@@ -283,7 +283,7 @@ public class CoreSchedulerService extends AbstractIdleService implements Schedul
   private void deleteScheduleInScheduler(ProgramSchedule schedule) throws NotFoundException {
     try {
       // TODO: [CDAP-11576] need to clean up the inconsistent state if this operation fails
-      scheduler.deleteProgramSchedule(schedule);
+      timeSchedulerService.deleteProgramSchedule(schedule);
     } catch (SchedulerException e) {
       // TODO: [CDAP-11574] temporarily catch the SchedulerException and throw NotFoundException.
       // Need better error handling
