@@ -23,7 +23,7 @@ import PieChartWithLegends from 'components/PieChartWithLegend';
 import {getAlgorithmLabel} from 'components/Experiments/store/ActionCreator';
 
 require('./DetailedViewTopPanel.scss');
-const HEIGHT_OF_PIE_CHART = 150;
+const HEIGHT_OF_PIE_CHART = 200;
 
 const colorScale = d3.scale.category20();
 

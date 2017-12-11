@@ -57,11 +57,6 @@ let tableHeaders = [
     width: '15%'
   },
   {
-    label: 'Hyperparameters',
-    property: 'hyperparams',
-    width: '10%'
-  },
-  {
     label: '',
     width: '2%'
   },
@@ -70,39 +65,39 @@ const regressionMetrics = [
   {
     label: 'rmse',
     property: 'rmse',
-    width: '10%'
+    width: '12%'
   },
   {
     label: 'r2',
     property: 'r2',
-    width: '10%'
+    width: '13%'
   },
   {
     label: 'evariance',
     property: 'evariance',
-    width: '10%'
+    width: '13%'
   },
   {
     label: 'mae',
     property: 'mae',
-    width: '11%'
+    width: '13%'
   },
 ];
 const categoricalMetrics = [
   {
     label: 'Precision',
     property: 'precision',
-    width: '14%'
+    width: '17%'
   },
   {
     label: 'Recall',
     property: 'recall',
-    width: '14%'
+    width: '17%'
   },
   {
     label: 'F1',
     property: 'f1',
-    width: '12%'
+    width: '17%'
   },
 ];
 
@@ -201,10 +196,12 @@ const renderTableBody = (experimentId, outcomeType, models) => {
   );
   const renderMetrics = (newHeaders, model) => {
     let metrics;
+    let len = newHeaders.length - 1;
+    let commonHeadersLen = tableHeaders.length - 1;
     if (NUMBER_TYPES.indexOf(outcomeType) !== -1) {
-      metrics = newHeaders.slice(5, 9);
+      metrics = newHeaders.slice(commonHeadersLen, len);
     } else {
-      metrics = newHeaders.slice(5, 8);
+      metrics = newHeaders.slice(commonHeadersLen, len);
     }
     return metrics.map(t => renderItem(t.width, model.evaluationMetrics[t.property] || '--'));
   };
@@ -215,7 +212,12 @@ const renderTableBody = (experimentId, outcomeType, models) => {
       {
         list.map((model) => {
           return (
-            <div className="grid-body-row-container" key={model.id}>
+            <div
+              className={classnames("grid-body-row-container", {
+                "opened": model.active
+              })}
+              key={model.id}
+            >
               <div
                 className={classnames("grid-body-row", {
                   "opened": model.active
@@ -225,12 +227,16 @@ const renderTableBody = (experimentId, outcomeType, models) => {
                 {renderItem(newHeaders[0].width, <IconSVG name={model.active ? "icon-caret-down" : "icon-caret-right"} />)}
                 {renderItem(newHeaders[1].width, model.name)}
                 {renderItem(newHeaders[2].width, <ModelStatusIndicator status={model.status} />)}
-                {renderItem(newHeaders[3].width, model.algorithm)}
-                {renderItem(newHeaders[4].width, <IconSVG name="icon-cog" />)}
+                {renderItem(newHeaders[3].width, (
+                  <span>
+                    <IconSVG name="icon-cog" />
+                    <span>{model.algorithm}</span>
+                  </span>
+                ))}
                 {renderMetrics(newHeaders, model)}
                 {
                   renderItem(
-                    newHeaders[NUMBER_TYPES.indexOf(outcomeType) !== -1 ? 9 : 8].width,
+                    newHeaders[newHeaders.length - 1].width,
                     <DeleteEntityBtn
                       confirmFn={deleteModel.bind(null, experimentId, model.id)}
                       headerTitle={"Delete Model"}
