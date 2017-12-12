@@ -36,13 +36,14 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
 
 import java.lang.reflect.Type;
 
 /**
  * Codec for {@link co.cask.cdap.proto.id.NamespacedEntityId}.
  */
-public class NamespacedEntityIdCodec implements JsonDeserializer<NamespacedEntityId> {
+public class NamespacedEntityIdCodec extends AbstractSpecificationCodec<NamespacedEntityId> {
 
   @Override
   public NamespacedEntityId deserialize(JsonElement json, Type typeOfT,
@@ -174,5 +175,10 @@ public class NamespacedEntityIdCodec implements JsonDeserializer<NamespacedEntit
     StreamId streamId = deserializeStreamId(id);
     String view = id.get("view").getAsString();
     return new StreamViewId(streamId.getNamespace(), streamId.getStream(), view);
+  }
+
+  @Override
+  public JsonElement serialize(NamespacedEntityId src, Type typeOfSrc, JsonSerializationContext context) {
+    return context.serialize(src);
   }
 }
