@@ -1320,6 +1320,9 @@ features:
     subtitleMessage2: View all your entities in the
   Pagination:
     dropdown-label: Page
+  PipelineList:
+    cdap-data-pipeline: Batch
+    cdap-data-streams: Realtime
   PipelineSummary:
     filterContainer:
       view: View
