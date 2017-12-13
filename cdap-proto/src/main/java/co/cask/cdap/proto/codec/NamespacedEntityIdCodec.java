@@ -32,7 +32,6 @@ import co.cask.cdap.proto.id.StreamViewId;
 import co.cask.cdap.proto.id.WorkerId;
 import co.cask.cdap.proto.id.WorkflowId;
 import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -72,7 +71,7 @@ public class NamespacedEntityIdCodec extends AbstractSpecificationCodec<Namespac
       case "workflow":
         return deserializeWorkflowId(jsonObj);
       case "dataset":
-        return deserializeDatasetInstanceId(jsonObj);
+        return deserializeDatasetId(jsonObj);
       case "stream":
         return deserializeStreamId(jsonObj);
       case "stream_view":
@@ -112,7 +111,6 @@ public class NamespacedEntityIdCodec extends AbstractSpecificationCodec<Namespac
     String namespace = id.get("namespace").getAsString();
     return new NamespaceId(namespace);
   }
-
 
   private ProgramId deserializeProgramId(JsonObject id) {
     ApplicationId app = deserializeApplicationId(id);
@@ -159,7 +157,7 @@ public class NamespacedEntityIdCodec extends AbstractSpecificationCodec<Namespac
     return new ArtifactId(namespace.getNamespace(), artifactName, id.get("version").getAsString());
   }
 
-  private DatasetId deserializeDatasetInstanceId(JsonObject id) {
+  private DatasetId deserializeDatasetId(JsonObject id) {
     NamespaceId namespace = deserializeNamespace(id);
     String instanceId = id.get("dataset").getAsString();
     return new DatasetId(namespace.getNamespace(), instanceId);

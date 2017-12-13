@@ -19,7 +19,6 @@ package co.cask.cdap.common.metadata;
 import co.cask.cdap.proto.ProgramType;
 import co.cask.cdap.proto.codec.NamespacedEntityIdCodec;
 import co.cask.cdap.proto.id.ApplicationId;
-import co.cask.cdap.proto.id.ArtifactId;
 import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.FlowId;
 import co.cask.cdap.proto.id.FlowletId;
@@ -29,7 +28,6 @@ import co.cask.cdap.proto.id.ProgramId;
 import co.cask.cdap.proto.id.ScheduleId;
 import co.cask.cdap.proto.id.ServiceId;
 import co.cask.cdap.proto.id.StreamId;
-import co.cask.cdap.proto.id.StreamViewId;
 import co.cask.cdap.proto.id.WorkerId;
 import co.cask.cdap.proto.id.WorkflowId;
 import co.cask.cdap.proto.metadata.MetadataScope;
@@ -57,26 +55,8 @@ public class MetadataRecordTest {
   private final ScheduleId scheduleId = new ScheduleId("ns", "app", "schedule");
   private final WorkerId workerId = new WorkerId(applicationId, "worker");
   private final WorkflowId workflowId = new WorkflowId(applicationId, "wflow");
-  private final ArtifactId artifactId = new ArtifactId("ns", "artifact", "1.0-SNAPSHOT");
   private final DatasetId datasetId = new DatasetId("ns", "ds2");
   private final StreamId streamId = new StreamId("ns", "stream1");
-  private final StreamViewId viewId = new StreamViewId("ns", "stream1", "view1");
-
-  @Test
-  public void testNamespaceCodecWithMetadata() {
-    Map<String, String> properties = new HashMap<>();
-    properties.put("key1", "value1");
-    properties.put("k1", "v1");
-    Set<String> tags = new LinkedHashSet<>();
-    tags.add("tag1");
-    tags.add("t1");
-    // verify with Id.Application
-    MetadataRecord metadataRecord = new MetadataRecord(applicationId, MetadataScope.USER, properties, tags);
-    String json = GSON.toJson(metadataRecord);
-    Assert.assertEquals(metadataRecord, GSON.fromJson(json, MetadataRecord.class));
-    Assert.assertEquals(applicationId, GSON.fromJson(json, MetadataRecord.class).getEntityId());
-  }
-
 
   @Test
   public void testWithMetadataRecord() {
