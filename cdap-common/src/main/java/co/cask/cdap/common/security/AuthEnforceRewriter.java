@@ -242,9 +242,8 @@ public class AuthEnforceRewriter implements ClassRewriter {
             return parameterDetail.getAnnotationNode();
           }
           if (Name.class.getName().equals(Type.getType(desc).getClassName())) {
-            LOG.debug("Updating parameter details for parameter at position '{}' for method '{}' in class '{}' " +
-                        "from {}' to '{}'. Since %s is preferred annotation.", parameter, methodName, className,
-                      parameterDetails.get(parameter), parameterDetail);
+            LOG.debug("Updating parameter details for parameter at position '{}' for method '{}' in class '{}'. " +
+                        "Since method annotations is preferred annotation.", parameter, methodName, className);
             parameterDetails.put(parameter, parameterDetail);
             return parameterDetail.getAnnotationNode();
           }
@@ -265,9 +264,6 @@ public class AuthEnforceRewriter implements ClassRewriter {
 
           List<EntityPartDetail> entityPartDetails = new ArrayList<>();
           for (String name : nodeProcessor.getEntities()) {
-            // just need to check for empty string since it cannot be null as that will be a compilation error
-            Preconditions.checkArgument(!name.isEmpty(), "Found an empty string in entity parts of annotation %s on " +
-              "method %s in class %s", nodeProcessor, methodName, className);
             if (paramPositions.containsKey(name)) {   // Param name cannot have ".", so it won't have "this."
               // if it matches
               entityPartDetails.add(new EntityPartDetail(name, false,
@@ -297,7 +293,7 @@ public class AuthEnforceRewriter implements ClassRewriter {
         /** Helper Methods **/
 
         private void verifyEntityParts(List<EntityPartDetail> entityPartDetails, Type enforceOn) {
-          Preconditions.checkArgument(entityPartDetails.size() > 0, "Entity Details for the annotation cannot be " +
+          Preconditions.checkArgument(!entityPartDetails.isEmpty(), "Entity Details for the annotation cannot be " +
             "empty");
           Type entityPartType = entityPartDetails.get(0).getType();
           // if the first entity part is not string then it should be of same type specified in enforce on
@@ -629,6 +625,7 @@ public class AuthEnforceRewriter implements ClassRewriter {
     private final Type type;
 
     EntityPartDetail(String entityName, boolean isField, Type type) {
+      Preconditions.checkArgument(!(entityName == null || entityName.isEmpty()), "Entity name must be specified");
       this.entityName = entityName;
       this.isField = isField;
       this.type = type;
