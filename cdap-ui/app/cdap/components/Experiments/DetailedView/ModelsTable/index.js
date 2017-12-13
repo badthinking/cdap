@@ -20,19 +20,18 @@ import SortableStickyGrid from 'components/SortableStickyGrid';
 import PaginationWithTitle from 'components/PaginationWithTitle';
 import IconSVG from 'components/IconSVG';
 import {connect} from 'react-redux';
-import {setActiveModel, getAlgorithmLabel, getModelsInExperiment} from 'components/Experiments/store/ActionCreator';
+import {setActiveModel, getAlgorithmLabel} from 'components/Experiments/store/ActionCreator';
 import {humanReadableDate} from 'services/helpers';
 import {NUMBER_TYPES} from 'services/global-constants';
-import DeleteEntityBtn from 'components/DeleteEntityBtn';
 import classnames from 'classnames';
 import LoadingSVGCentered from 'components/LoadingSVGCentered';
-import { myExperimentsApi } from 'api/experiments';
 import {objectQuery} from 'services/helpers';
-import NamespaceStore from 'services/NamespaceStore';
 import isEmpty from 'lodash/isEmpty';
 import ModelStatusIndicator from 'components/Experiments/DetailedView/ModelStatusIndicator';
 import {Link} from 'react-router-dom';
 import {getCurrentNamespace} from 'services/NamespaceStore';
+import DeleteModelBtn from 'components/Experiments/DetailedView/DeleteModelBtn';
+import DeleteExperimentBtn from 'components/Experiments/DetailedView/DeleteExperimentBtn';
 
 require('./DetailedViewModelsTable.scss');
 
@@ -61,6 +60,7 @@ let tableHeaders = [
     width: '2%'
   },
 ];
+
 const regressionMetrics = [
   {
     label: 'rmse',
@@ -83,6 +83,7 @@ const regressionMetrics = [
     width: '13%'
   },
 ];
+
 const categoricalMetrics = [
   {
     label: 'Precision',
@@ -106,6 +107,7 @@ const addMetricsToHeaders = (tableHeaders, metrics) => ([
   ...metrics,
   ...tableHeaders.slice(tableHeaders.length - 1)
 ]);
+
 const getNewHeadersBasedOnOutcome = (outcomeType) => (
   NUMBER_TYPES.indexOf(outcomeType) !== -1 ?
     addMetricsToHeaders(tableHeaders, regressionMetrics)
@@ -139,42 +141,6 @@ const renderTableHeaders = (outcomeType, renderSortableTableHeader) => {
   );
 };
 
-const deleteModel = (experimentId, modelId, callback, errCallback) => {
-  let {selectedNamespace: namespace} = NamespaceStore.getState();
-  myExperimentsApi
-    .deleteModelInExperiment({
-      namespace,
-      experimentId,
-      modelId
-    })
-    .subscribe(
-      () => {
-        getModelsInExperiment(experimentId);
-        callback();
-      },
-      err => {
-        let error = typeof err.response === 'string' ? err.response : JSON.stringify(err);
-        errCallback(error);
-      }
-    );
-};
-
-const deleteExperiment = (experimentId, callback, errCallback) => {
-  let {selectedNamespace: namespace} = NamespaceStore.getState();
-  myExperimentsApi
-    .deleteExperiment({
-      namespace,
-      experimentId
-    })
-    .subscribe(
-      () => window.location.href =`${window.location.origin}/cdap/ns/${namespace}/experiments`,
-      err => {
-        let error = typeof err.response === 'string' ? err.response : JSON.stringify(err);
-        errCallback(error);
-      }
-    );
-};
-
 const renderTableBody = (experimentId, outcomeType, models) => {
   let list = models.map(model => {
     let {name, algorithm, hyperparameters} = model;
@@ -205,7 +171,7 @@ const renderTableBody = (experimentId, outcomeType, models) => {
     }
     return metrics.map(t => renderItem(t.width, model.evaluationMetrics[t.property] || '--'));
   };
-  const deleteConfimElement = (model) => <div>Are you sure you want to delete <b>{model.name}</b> model </div>;
+
   let newHeaders = getNewHeadersBasedOnOutcome(outcomeType);
   return (
     <div className="grid-body">
@@ -237,10 +203,9 @@ const renderTableBody = (experimentId, outcomeType, models) => {
                 {
                   renderItem(
                     newHeaders[newHeaders.length - 1].width,
-                    <DeleteEntityBtn
-                      confirmFn={deleteModel.bind(null, experimentId, model.id)}
-                      headerTitle={"Delete Model"}
-                      confirmationElem={deleteConfimElement(model)}
+                    <DeleteModelBtn
+                      experimentId={experimentId}
+                      model={model}
                     />
                   )
                 }
@@ -301,15 +266,7 @@ function ModelsTable({experimentId, list, loading, outcomeType}) {
           >
             Add a Model
           </Link>
-          <DeleteEntityBtn
-            confirmFn={deleteExperiment.bind(null, experimentId)}
-            className="btn btn-link"
-            headerTitle={"Delete Model"}
-            confirmationElem={
-              <div>Are you sure you want to delete <b>{experimentId}</b> experiment </div>
-            }
-            btnLabel={"Delete Experiment"}
-          />
+          <DeleteExperimentBtn experimentId={experimentId} />
         </div>
         <PaginationWithTitle
           handlePageChange={(currentPage) => console.log(`Pagination coming soon. Right now in page # ${currentPage}`)}
