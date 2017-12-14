@@ -45,7 +45,7 @@ const chartSpec = {
   }
 };
 
-export default function GroupedBarChart({data, customEncoding = {}, width}) {
+export default function GroupedBarChart({data, customEncoding = {}, width, heightOffset}) {
   let newSpec = {
     ...chartSpec,
     "encoding": {
@@ -59,6 +59,7 @@ export default function GroupedBarChart({data, customEncoding = {}, width}) {
       data={data}
       className="grouped-bar-chart"
       width={width}
+      heightOffset={heightOffset}
     />
   );
 }
@@ -72,5 +73,6 @@ GroupedBarChart.propTypes = {
     count: PropTypes.number
   })).isRequired,
   customEncoding: PropTypes.object,
-  width: PropTypes.oneOfType(PropTypes.number, PropTypes.func)
+  width: PropTypes.oneOfType(PropTypes.number, PropTypes.func),
+  heightOffset: PropTypes.number
 };

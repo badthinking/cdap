@@ -33,7 +33,8 @@ function createApi (dataSrc, method, type, path, options = {}) {
       reqObj = Object.assign({}, reqObj, { headers });
     }
 
-    if (cookie.load('CDAP_Auth_Token')) {
+    // Since CDAP_AUTH_TOKEN won't have a JSON we need to parse we can skip parse.
+    if (cookie.load('CDAP_Auth_Token', false)) {
       reqObj.headers = reqObj.headers || {};
       if (!isNil(cookie.load('CDAP_Auth_Token'))) {
         reqObj.headers.Authorization = `Bearer ${cookie.load('CDAP_Auth_Token')}`;

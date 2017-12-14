@@ -57,6 +57,7 @@ export default function ExperimentsListBarChart({data}) {
         data={data}
         customEncoding={customEncoding}
         width={(dimension, data) => ((dimension.width - 190) / (data.length / 2))}
+        heightOffset={70}
       />
     </div>
   );

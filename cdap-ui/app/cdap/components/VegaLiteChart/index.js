@@ -71,10 +71,6 @@ export default class VegaLiteChart extends Component {
         ...this.props.spec,
         width: dimension.width - (this.props.widthOffset || 0),
         height: dimension.height - (this.props.heightOffset || 0),
-        "autosize": {
-          "type": "fit",
-          "contains": "padding"
-        },
         data: {
           name: this.state.id
         }
