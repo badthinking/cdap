@@ -20,6 +20,7 @@ import {connect} from 'react-redux';
 import {NUMBER_TYPES} from 'services/global-constants';
 import StyledSelectTag from 'components/StyledSelectTag';
 import AlgorithmDistribution from 'components/Experiments/DetailedView/ExperimentMetricsDropdown/AlgorithmDistribution';
+import ModelStatusesDistribution from 'components/Experiments/DetailedView/ExperimentMetricsDropdown/ModelStatusesDistribution';
 import MetricChartWithLegend from 'components/Experiments/DetailedView/MetricChartWithLegend';
 
 require('./ExperimentMetricsDropdown.scss');
@@ -37,7 +38,7 @@ class ExperimentMetricsDropdown extends Component {
       value: 'Algorithm Types'
     },
     {
-      id: 'modelstatuses',
+      id: 'statuses',
       value: 'Model Status'
     }
   ];
@@ -51,8 +52,8 @@ class ExperimentMetricsDropdown extends Component {
       value: 'Mean Avg Error'
     },
     {
-      id: 'rmse',
-      value: 'Root Mean Square Error'
+      id: 'r2',
+      value: 'R2'
     },
     {
       id: 'evariance',
@@ -85,12 +86,15 @@ class ExperimentMetricsDropdown extends Component {
   };
   renderMetricBarChart = (metric, label) => {
     if (metric === 'algorithms') {
-      console.log('asasasd: ', this.props.algorithms);
       return (
         <AlgorithmDistribution algorithms={this.props.algorithms.histo || []}/>
       );
     }
-    console.log(this.props.evaluationMetrics);
+    if (metric === 'statuses') {
+      return (
+        <ModelStatusesDistribution modelStatuses={this.props.statuses.histo || []} />
+      );
+    }
     let values = this.props.evaluationMetrics[metric];
     if (!values) {
       return null;
