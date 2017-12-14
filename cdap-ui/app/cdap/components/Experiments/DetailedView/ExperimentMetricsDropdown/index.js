@@ -116,7 +116,6 @@ class ExperimentMetricsDropdown extends Component {
         keys.concat(ExperimentMetricsDropdown.regressionKeys)
       : keys.concat(ExperimentMetricsDropdown.categoricalKeys);
     let matchingKey = keys.find(key => key.id === this.state.active);
-    console.log('matching key: ', matchingKey);
     return (
       <div className="experiments-metrics-dropdown clearfix" ref={ref => this.containerRef = ref}>
         <StyledSelectTag keys={keys} onChange={this.onSelectChange} />

@@ -120,11 +120,12 @@ const renderTableHeaders = (outcomeType, renderSortableTableHeader) => {
   return (
     <div className="grid-header">
       {
-        newHeaders.map(tableHeader => {
+        newHeaders.map((tableHeader, i) => {
           return (
             <div
               className="grid-header-item"
               title={tableHeader.label}
+              key={i}
               style={{ width: `${tableHeader.width}` }}
             >
               {
@@ -192,7 +193,7 @@ const renderTableBody = (experimentId, outcomeType, models) => {
               >
                 {renderItem(newHeaders[0].width, <IconSVG name={model.active ? "icon-caret-down" : "icon-caret-right"} />)}
                 {renderItem(newHeaders[1].width, model.name)}
-                {renderItem(newHeaders[2].width, <ModelStatusIndicator status={model.status} />)}
+                {renderItem(newHeaders[2].width, <ModelStatusIndicator status={model.status || '--'} />)}
                 {renderItem(newHeaders[3].width, (
                   <span>
                     <IconSVG name="icon-cog" />
@@ -287,7 +288,7 @@ function ModelsTable({experimentId, list, loading, outcomeType}) {
 }
 
 ModelsTable.propTypes = {
-  list: PropTypes.arrayOf,
+  list: PropTypes.array,
   loading: PropTypes.bool,
   experimentId: PropTypes.string,
   outcomeType: PropTypes.string

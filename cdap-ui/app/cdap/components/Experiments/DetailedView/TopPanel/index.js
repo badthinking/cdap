@@ -64,8 +64,8 @@ Metadata.propTypes = {
   name: PropTypes.string,
   description: PropTypes.string,
   srcpath: PropTypes.string,
-  total: PropTypes.string,
-  deployed: PropTypes.string,
+  total: PropTypes.number,
+  deployed: PropTypes.number,
   outcome: PropTypes.string
 };
 

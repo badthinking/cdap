@@ -23,7 +23,6 @@ const HEIGHT_OF_PIE_CHART = 190;
 
 const colorScale = d3.scale.category20();
 const ModelStatusesDistribution = ({modelStatuses}) => {
-  console.log();
   if (!modelStatuses.length) {
     return null;
   }
