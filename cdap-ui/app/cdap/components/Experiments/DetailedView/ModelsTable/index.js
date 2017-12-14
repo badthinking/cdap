@@ -195,7 +195,7 @@ const renderTableBody = (experimentId, outcomeType, models) => {
                 {renderItem(newHeaders[1].width, model.name)}
                 {renderItem(newHeaders[2].width, <ModelStatusIndicator status={model.status || '--'} />)}
                 {renderItem(newHeaders[3].width, (
-                  <span>
+                  <span className="algorithm-cell">
                     <IconSVG name="icon-cog" />
                     <span>{model.algorithm}</span>
                   </span>

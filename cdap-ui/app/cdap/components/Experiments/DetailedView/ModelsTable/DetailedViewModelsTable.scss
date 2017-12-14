@@ -63,6 +63,11 @@
         [class*="icon-caret-"] {
           font-size: 1.2rem; // FIXME: We should have this as a variable and should be standard in variables.scss
         }
+        .algorithm-cell {
+          > span {
+            margin-left: 3px;
+          }
+        }
       }
       &:not(.opened):hover {
         background-color: $grey-08;
