@@ -20,6 +20,7 @@ import NamespaceStore from 'services/NamespaceStore';
 import {MyPipelineApi} from 'api/pipeline';
 import IconSVG from 'components/IconSVG';
 import {humanReadableDate} from 'services/helpers';
+import {Observable} from 'rxjs/Observable';
 
 export default class NextRun extends Component {
   static propTypes = {
@@ -33,6 +34,25 @@ export default class NextRun extends Component {
   componentWillMount() {
     if (this.props.pipelineInfo.type === 'Realtime') { return; }
 
+    // Interval only runs after the delay, so have to
+    // initiall call the function first
+    this.getNextRun();
+    this.interval = Observable.interval(30 * 1000)
+      .subscribe(this.getNextRun.bind(this));
+  }
+
+  componentWillUnmount() {
+    if (this.interval && this.interval.unsubscribe) {
+      this.interval.unsubscribe();
+    }
+  }
+
+  state = {
+    loading: true,
+    nextRun: null
+  };
+
+  getNextRun() {
     let namespace = NamespaceStore.getState().selectedNamespace;
     let pipelineInfo = this.props.pipelineInfo;
 
@@ -45,25 +65,14 @@ export default class NextRun extends Component {
       programName: 'DataPipelineWorkflow'
     };
 
-    this.interval = setInterval(() => {
-      MyPipelineApi.getNextRun(params)
-        .subscribe((res) => {
-          this.setState({
-            loading: false,
-            nextRun: res.length ? res[0].time : null
-          });
+    MyPipelineApi.getNextRun(params)
+      .subscribe((res) => {
+        this.setState({
+          loading: false,
+          nextRun: res.length ? res[0].time : null
         });
-    }, 1000*60*5);
+      });
   }
-
-  componentWillUnmount() {
-    clearInterval(this.interval);
-  }
-
-  state = {
-    loading: true,
-    nextRun: null
-  };
 
   render() {
     if (this.props.pipelineInfo.type === 'Realtime') {
