@@ -29,7 +29,7 @@ import ExperimentPopovers from 'components/Experiments/Popovers';
 import DataPrepStore from 'components/DataPrep/store';
 import {setOutcomeColumns, setDirectives, setSrcPath, setWorkspace, getExperimentForEdit} from 'components/Experiments/store/ActionCreator';
 import MLAlgorithmSelection from 'components/Experiments/MLAlgorithmSelection';
-import ExperimentMetadata from 'components/Experiments/ExperimentMetadata';
+import ExperimentMetadata from 'components/Experiments/CreateView/ExperimentMetadata';
 import LoadingSVGCentered from 'components/LoadingSVGCentered';
 import Helmet from 'react-helmet';
 import queryString from 'query-string';

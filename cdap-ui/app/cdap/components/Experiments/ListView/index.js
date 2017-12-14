@@ -23,7 +23,7 @@ import SortableStickyTable from 'components/SortableStickyTable';
 import PieChart from 'components/PieChart';
 import PaginationWithTitle from 'components/PaginationWithTitle';
 import d3 from 'd3';
-import ExperimentsListBarChart from 'components/Experiments/ExperimentsListBarChart';
+import ExperimentsListBarChart from 'components/Experiments/ListView/ExperimentsListBarChart';
 import ExperimentsPlusButton from 'components/Experiments/ExperimentsPlusButton';
 import EmptyMessageContainer from 'components/EmptyMessageContainer';
 import NamespaceStore from 'services/NamespaceStore';
