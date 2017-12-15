@@ -21,7 +21,6 @@ import {Observable} from 'rxjs/Observable';
 import T from 'i18n-react';
 import orderBy from 'lodash/orderBy';
 import IconSVG from 'components/IconSVG';
-// import {humanReadableDate} from 'services/helpers';
 import StatusMapper from 'services/StatusMapper';
 import NextRun from 'components/PipelineList/DeployedPipelineView/NextRun';
 import Duration from 'components/Duration';
@@ -203,39 +202,21 @@ export default class DeployedPipelineView extends Component {
     return (
       <div className="pipeline-deployed-view">
         <div className="deployed-header">
-          <div className="filter-option">
-            <span className="fa fa-fw">
-              <IconSVG name="icon-check-square"></IconSVG>
-            </span>
-            <span className="filter-text">Running</span>
+          <div className="pipeline-count d-inline-block">
+            {this.state.pipelineList.length} Pipelines
           </div>
 
-          <div className="filter-option">
-            <span className="fa fa-fw">
-              <IconSVG name="icon-check-square"></IconSVG>
-            </span>
-            <span className="filter-text">Deployed</span>
-          </div>
-
-          <div className="filter-option">
-            <span className="fa fa-fw">
-              <IconSVG name="icon-check-square"></IconSVG>
-            </span>
-            <span className="filter-text">Successful</span>
-          </div>
-
-          <div className="filter-option">
-            <span className="fa fa-fw">
-              <IconSVG name="icon-check-square"></IconSVG>
-            </span>
-            <span className="filter-text">Failed</span>
-          </div>
-
-          <div className="filter-option">
-            <span className="fa fa-fw">
-              <IconSVG name="icon-check-square"></IconSVG>
-            </span>
-            <span className="filter-text">Stopped</span>
+          <div className="search-box d-inline-block">
+            <div className="input-group">
+              <span className="input-group-addon">
+                <IconSVG name="icon-search" />
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search by Pipeline Name"
+              />
+            </div>
           </div>
         </div>
 
