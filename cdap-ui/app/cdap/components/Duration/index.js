@@ -18,6 +18,10 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import moment from 'moment';
 
+const ONE_SECOND = 1000;
+const ONE_MINUTE = 60 * ONE_SECOND;
+const ONE_HOUR = 60 * ONE_MINUTE;
+
 export default class Duration extends Component {
   static propTypes = {
     targetTime: PropTypes.number,
@@ -36,25 +40,35 @@ export default class Duration extends Component {
     this.calculateTime();
   }
 
-  componentWillUnmount() {
-    if (this.timeout) {
-      clearTimeout(this.timeout);
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.targetTime !== this.props.targetTime) {
+      this.stopCounter();
     }
+
+    this.calculateTime(nextProps.targetTime);
   }
 
-  // Need to add steps when the component receive a new targetTime
+  componentWillUnmount() {
+    this.stopCounter();
+  }
 
   state = {
     displayDuration: null
   };
 
-  calculateTime() {
+  stopCounter() {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+  }
+
+  calculateTime(newTime = this.props.targetTime) {
     if (!this.props.targetTime) { return; }
 
-    let targetTime = this.props.targetTime;
+    let targetTime = newTime;
 
     if (!this.props.isMillisecond) {
-      targetTime *= 1000;
+      targetTime *= ONE_SECOND;
     }
 
     let duration = targetTime - new Date().valueOf();
@@ -64,16 +78,16 @@ export default class Duration extends Component {
     this.setState({
       displayDuration: moment.duration(duration).humanize(isPast)
     }, () => {
-      let delay = 1000;
+      let delay = ONE_SECOND;
 
       let absDuration = Math.abs(duration);
 
-      if (absDuration > 60000) {
-        delay *= 60;
-      }
-
-      if (absDuration > 60 * 60 * 1000) {
-        delay *= 60;
+      if (absDuration > ONE_HOUR) {
+        delay = 15 * ONE_MINUTE;
+      } else if (absDuration > 5 * ONE_MINUTE) {
+        delay = ONE_MINUTE;
+      } else if (absDuration > 2 * ONE_MINUTE) {
+        delay = 15 * ONE_SECOND;
       }
 
       this.timeout = setTimeout(() => {
