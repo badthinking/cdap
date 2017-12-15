@@ -21,9 +21,10 @@ import {Observable} from 'rxjs/Observable';
 import T from 'i18n-react';
 import orderBy from 'lodash/orderBy';
 import IconSVG from 'components/IconSVG';
-import {humanReadableDate} from 'services/helpers';
+// import {humanReadableDate} from 'services/helpers';
 import StatusMapper from 'services/StatusMapper';
 import NextRun from 'components/PipelineList/DeployedPipelineView/NextRun';
+import Duration from 'components/Duration';
 
 require('./DeployedPipelineView.scss');
 
@@ -178,7 +179,12 @@ export default class DeployedPipelineView extends Component {
                     <td>{pipelineInfo.type}</td>
                     <td>{pipelineInfo.version}</td>
                     <td>{pipelineInfo.runs.length}</td>
-                    <td>{humanReadableDate(pipelineInfo.lastStartTime)}</td>
+                    <td>
+                      <Duration
+                        targetTime={pipelineInfo.lastStartTime}
+                        isMillisecond={false}
+                      />
+                    </td>
                     <td>
                       <NextRun pipelineInfo={pipelineInfo} />
                     </td>

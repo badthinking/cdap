@@ -19,8 +19,8 @@ import React, { Component } from 'react';
 import NamespaceStore from 'services/NamespaceStore';
 import {MyPipelineApi} from 'api/pipeline';
 import IconSVG from 'components/IconSVG';
-import {humanReadableDate} from 'services/helpers';
 import {Observable} from 'rxjs/Observable';
+import Duration from 'components/Duration';
 
 export default class NextRun extends Component {
   static propTypes = {
@@ -75,7 +75,7 @@ export default class NextRun extends Component {
   }
 
   render() {
-    if (this.props.pipelineInfo.type === 'Realtime') {
+    if (this.props.pipelineInfo.type === 'Realtime' || (!this.state.loading && !this.state.nextRun)) {
       return <span>--</span>;
     }
 
@@ -86,11 +86,6 @@ export default class NextRun extends Component {
         </span>
       );
     }
-
-    return (
-      <span>
-        {humanReadableDate(this.state.nextRun, true)}
-      </span>
-    );
+    return <Duration targetTime={this.state.nextRun} />;
   }
 }
