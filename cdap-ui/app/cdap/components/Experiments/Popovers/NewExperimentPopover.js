@@ -22,8 +22,9 @@ import {
   onExperimentNameChange,
   onExperimentDescriptionChange,
   onExperimentOutcomeChange,
-  setExperimentCreated
+  createExperiment
 } from 'components/Experiments/store/ActionCreator';
+import IconSVG from 'components/IconSVG';
 
 const ExperimentName = ({name, onNameChange, isEdit}) => {
   return (
@@ -95,23 +96,29 @@ ExperimentOutcome.propTypes = {
   isEdit: PropTypes.bool
 };
 
-const CreateExperimentBtn = ({state, setExperimentCreated}) => {
+const CreateExperimentBtn = ({state, createExperiment}) => {
   const isAddExperimentBtnEnabled = () => {
     return state.name.length && state.description.length && state.outcome.length;
+  };
+  const renderBtnContent = () => {
+    if (state.loading) {
+      return <IconSVG name="icon-spinner" className="fa-spin" />;
+    }
+    return state.isEdit ? 'Edit Experiment' : 'Create Experiment';
   };
   return (
     <button
       className="btn btn-primary"
       disabled={!isAddExperimentBtnEnabled()}
-      onClick={setExperimentCreated}
+      onClick={createExperiment}
     >
-      {state.isEdit ? 'Edit Experiment' : 'Create Experiment'}
+      {renderBtnContent()}
     </button>
   );
 };
 CreateExperimentBtn.propTypes = {
   state: PropTypes.object,
-  setExperimentCreated: PropTypes.func
+  createExperiment: PropTypes.func
 };
 
 const NewExperimentPopoverWrapper = ({isExperimentCreated}) => {
@@ -136,7 +143,7 @@ const NewExperimentPopoverWrapper = ({isExperimentCreated}) => {
 NewExperimentPopoverWrapper.propTypes = {
   isExperimentCreated: PropTypes.bool
 };
-const mapDispatchToCreateExperimentBtnProps = () => ({ setExperimentCreated});
+const mapDispatchToCreateExperimentBtnProps = () => ({ createExperiment });
 const mapStateToCreateExperimentBtnProps = (state) => ({ state: {...state.experiments_create} });
 const mapStateToNameProps = (state) => ({ name: state.experiments_create.name, isEdit: state.experiments_create.isEdit });
 const mapDispatchToNameProps = () => ({ onNameChange: onExperimentNameChange });
@@ -145,12 +152,11 @@ const mapDispatchToDescriptionToProps = () => ({ onDescriptionChange: onExperime
 const mapStateToOutcomeProps = (state) => ({ outcome: state.experiments_create.outcome, columns: state.model_create.columns, isEdit: state.experiments_create.isEdit });
 const mapDispatchToOutcomeProps = () => ({onOutcomeChange: onExperimentOutcomeChange});
 const mapNEPWStateToProps = (state) => ({ isExperimentCreated: state.experiments_create.isExperimentCreated });
-const mapNEPWDispatchToProps = () => ({ setExperimentCreated });
 
 const ExperiementDescriptionWrapper = connect(mapStateToDescriptionProps, mapDispatchToDescriptionToProps)(ExperimentDescription);
 const ExperimentNameWrapper = connect(mapStateToNameProps, mapDispatchToNameProps)(ExperimentName);
 const ExperimentOutcomeWrapper = connect(mapStateToOutcomeProps, mapDispatchToOutcomeProps)(ExperimentOutcome);
-const ConnectedNewExperimentPopoverWrapper = connect(mapNEPWStateToProps, mapNEPWDispatchToProps)(NewExperimentPopoverWrapper);
+const ConnectedNewExperimentPopoverWrapper = connect(mapNEPWStateToProps)(NewExperimentPopoverWrapper);
 const ConnectedCreateExperimentBtn = connect(mapStateToCreateExperimentBtnProps, mapDispatchToCreateExperimentBtnProps)(CreateExperimentBtn);
 
 export default ConnectedNewExperimentPopoverWrapper;

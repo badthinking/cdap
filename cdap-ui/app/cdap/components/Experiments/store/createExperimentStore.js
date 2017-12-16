@@ -27,18 +27,21 @@ const ACTIONS = {
   SET_CREATE_EXPERIMENT_LOADING: 'SET_CREATE_EXPERIMENT_LOADING',
   SET_EXPERIMENT_METADATA_FOR_EDIT: 'SET_EXPERIMENT_METADATA_FOR_EDIT',
 
+  SET_SPLIT_INFO: 'SET_SPLIT_INFO',
+  SET_SCHEMA: 'SET_SCHEMA',
   SET_OUTCOME_COLUMNS: 'SET_OUTCOME_COLUMNS',
   SET_DIRECTIVES: 'SET_DIRECTIVES',
   SET_MODEL_NAME: 'SET_MODEL_NAME',
   SET_MODEL_DESCRIPTION: 'SET_MODEL_DESCRIPTION',
-  SET_MODEL_CREATED: 'SET_MODEL_CREATED',
+  SET_MODEL_METADATA_FILLED: 'SET_MODEL_METADATA_FILLED',
   SET_MODEL_ML_ALGORITHM: 'SET_MODEL_ML_ALGORITHM',
-  SET_WORKSPACE_ID: 'SET_WORKSPACE_ID'
+  SET_WORKSPACE_ID: 'SET_WORKSPACE_ID',
+  SET_SPLIT_FINALIZED: 'SET_SPLIT_FINALIZED'
 };
 
 const DEFAULT_EXPERIMENTS_CREATE_VALUE = {
-  name: '',
-  description: '',
+  name: 'S2',
+  description: 'S2',
   outcome: '',
   srcpath: '',
   loading: false,
@@ -50,14 +53,16 @@ const DEFAULT_MODEL_CREATE_VALUE = {
   name: '',
   description: '',
   directives: [],
+  schema: null,
+  split: null,
   columns: [],
-  workspaceId: '',
-  splitMethod: 'random',
+  workspaceId: '3ba427dec843a20017a73e5169f095ee',
   algorithm: {
     name: ''
   },
   algorithmsList: MLAlgorithmsList,
-  isModelCreated: false
+  isModelMetadataFilled: false,
+  isSplitFinalized: false
 };
 
 const experiments_create = (state = DEFAULT_EXPERIMENTS_CREATE_VALUE, action = defaultAction) => {
@@ -117,10 +122,20 @@ const model_create = (state = DEFAULT_MODEL_CREATE_VALUE, action = defaultAction
         ...state,
         description: action.payload.description
       };
-    case ACTIONS.SET_MODEL_CREATED:
+    case ACTIONS.SET_MODEL_METADATA_FILLED:
       return {
         ...state,
-        isModelCreated: true
+        isModelMetadataFilled: action.payload.isModelMetadataFilled
+      };
+    case ACTIONS.SET_SPLIT_INFO:
+      return {
+        ...state,
+        split: action.payload.split
+      };
+    case ACTIONS.SET_SPLIT_FINALIZED:
+      return {
+        ...state,
+        isSplitFinalized: action.payload.isSplitFinalized
       };
     case ACTIONS.SET_OUTCOME_COLUMNS:
       return {
@@ -141,6 +156,11 @@ const model_create = (state = DEFAULT_MODEL_CREATE_VALUE, action = defaultAction
       return {
         ...state,
         workspaceId: action.payload.workspaceId
+      };
+    case ACTIONS.SET_SCHEMA:
+      return {
+        ...state,
+        schema: action.payload.schema
       };
     case ACTIONS.SET_EXPERIMENT_METADATA_FOR_EDIT: {
       let {workspaceId} = action.payload.experimentDetails;

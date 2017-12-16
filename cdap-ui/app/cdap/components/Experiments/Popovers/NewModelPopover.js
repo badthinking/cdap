@@ -22,7 +22,7 @@ import {
   setExperimentCreated,
   onModelNameChange,
   onModelDescriptionChange,
-  setModelCreated
+  setModelMetadataFilled
 } from 'components/Experiments/store/ActionCreator';
 
 const ModelName = ({modelName, onModelNameChange}) => {
@@ -63,12 +63,12 @@ ModelDescription.propTypes = {
   onModelDescriptionChange: PropTypes.func
 };
 
-const CreateModelBtn = ({state, setModelCreated}) => {
+const CreateModelBtn = ({state, setModelMetadataFilled}) => {
   const isAddModelBtnEnabled = () => state.name.length && state.description.length;
   return (
     <button
       className="btn btn-primary"
-      onClick={setModelCreated}
+      onClick={setModelMetadataFilled}
       disabled={!isAddModelBtnEnabled()}
     >
       Create Model
@@ -77,12 +77,12 @@ const CreateModelBtn = ({state, setModelCreated}) => {
 };
 CreateModelBtn.propTypes = {
   state: PropTypes.object,
-  setModelCreated: PropTypes.func
+  setModelMetadataFilled: PropTypes.func
 };
 
 const ExperimentMetadata = ({experimentOutcome, experimentDescription, setExperimentCreated}) => {
   return (
-    <div className="experiment-metadata">
+    <div className="experiment-metadata-popover">
       <Col xs="12">
         <Row>
           <Col xs="6">Outcome:</Col>
@@ -140,7 +140,7 @@ const mapDispatchToModelNameProps = () => ({ onModelNameChange });
 const mapStateToModelDescriptionProps = (state) => ({ modelDescription: state.model_create.description });
 const mapDispatchToModelDescriptionProps = () => ({ onModelDescriptionChange });
 const mapStateToCreateModelBtnProps = (state) => ({ state: state.model_create});
-const mapDispatchToCreateModelBtnProps = () => ({ setModelCreated });
+const mapDispatchToCreateModelBtnProps = () => ({ setModelMetadataFilled });
 const mapStateToExperimentMetadataProps = (state) => ({
   experimentOutcome: state.experiments_create.outcome,
   experimentDescription: state.experiments_create.description

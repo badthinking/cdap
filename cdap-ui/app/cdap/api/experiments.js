@@ -18,12 +18,14 @@ import DataSourceConfigurer from 'services/datasource/DataSourceConfigurer';
 import {apiCreator} from 'services/resource-helper';
 
 let dataSrc = DataSourceConfigurer.getInstance();
-let basePath = '/namespaces/:namespace/apps/ModelManagementApp/services/ModelManagerService/methods';
+let basePath = '/namespaces/:namespace/apps/ModelManagementApp/spark/ModelManagerService/methods';
 export const myExperimentsApi = {
   list: apiCreator(dataSrc, 'GET', 'REQUEST', `${basePath}/experiments`),
 
   getExperiment: apiCreator(dataSrc, 'GET', 'REQUEST', `${basePath}/experiments/:experimentId`),
   getModelsInExperiment: apiCreator(dataSrc, 'GET', 'REQUEST', `${basePath}/experiments/:experimentId/models`),
+  getSplitDetails: apiCreator(dataSrc, 'GET', 'REQUEST', `${basePath}/experiments/:experimentId/splits/:splitId`),
+  getSplitStatus: apiCreator(dataSrc, 'GET', 'REQUEST', `${basePath}/experiments/:experimentId/splits/:splitId/status`),
   getModelStatus: apiCreator(dataSrc, 'GET', 'REQUEST', `${basePath}/experiments/:experimentId/models/:modelId/status`),
   getSplitsInExperiment: apiCreator(dataSrc, 'GET', 'REQUEST', `${basePath}/experiments/:experimentId/splits`),
 

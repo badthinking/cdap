@@ -28,9 +28,9 @@ import UncontrolledPopover from 'components/UncontrolledComponents/Popover';
 import ExperimentPopovers from 'components/Experiments/Popovers';
 import DataPrepStore from 'components/DataPrep/store';
 import {setOutcomeColumns, setDirectives, setSrcPath, setWorkspace, getExperimentForEdit} from 'components/Experiments/store/ActionCreator';
-import MLAlgorithmSelection from 'components/Experiments/MLAlgorithmSelection';
+import MLAlgorithmSelection from 'components/Experiments/CreateView/MLAlgorithmSelection';
+import SplitDataStep from 'components/Experiments/CreateView/SplitDataStep';
 import ExperimentMetadata from 'components/Experiments/CreateView/ExperimentMetadata';
-import LoadingSVGCentered from 'components/LoadingSVGCentered';
 import Helmet from 'react-helmet';
 import queryString from 'query-string';
 
@@ -42,8 +42,9 @@ export default class ExperimentCreateView extends Component {
     location: PropTypes.object,
   };
   state = {
-    workspaceId: '',
-    isModelCreated: createExperimentStore.getState().model_create.isModelCreated
+    workspaceId: createExperimentStore.getState().model_create.workspaceId,
+    isModelMetadataFilled: createExperimentStore.getState().model_create.isModelMetadataFilled,
+    isSplitFinalized: createExperimentStore.getState().model_create.isSplitFinalized,
   };
   componentDidMount() {
     this.dataprepsubscription = DataPrepStore.subscribe(() => {
@@ -57,17 +58,14 @@ export default class ExperimentCreateView extends Component {
       setDirectives(directives);
     });
     this.createExperimentStoreSubscription = createExperimentStore.subscribe(() => {
-      let {model_create, experiments_create} = createExperimentStore.getState();
-      let {isModelCreated, workspaceId} = model_create;
+      let {model_create} = createExperimentStore.getState();
+      let {isModelMetadataFilled, workspaceId} = model_create;
       let newState = {};
-      if (this.state.isModelCreated !== isModelCreated) {
-        newState = {isModelCreated};
+      if (this.state.isModelMetadataFilled !== isModelMetadataFilled) {
+        newState = {isModelMetadataFilled};
       }
       if (this.state.workspaceId !== workspaceId) {
         newState = {...newState, workspaceId};
-      }
-      if (experiments_create.loading) {
-        newState = {...newState, loading: true};
       }
       if (Object.keys(newState).length > 0) {
         this.setState(newState);
@@ -163,11 +161,14 @@ export default class ExperimentCreateView extends Component {
     }
 
     let {algorithm} = createExperimentStore.getState().model_create;
-    if (this.state.workspaceId && !this.state.isModelCreated) {
+    if (this.state.workspaceId && !this.state.isModelMetadataFilled) {
       return this.renderDataPrep();
     }
 
-    if (this.state.isModelCreated && !algorithm.length) {
+    if (this.state.isModelMetadataFilled && !this.state.isSplitFinalized) {
+      return <SplitDataStep />;
+    }
+    if (this.state.isSplitFinalized && !algorithm.length) {
       return this.renderAlgorithmSelectionStep();
     }
 
@@ -178,7 +179,6 @@ export default class ExperimentCreateView extends Component {
       <div className="experiments-create-view">
         <Helmet title="CDAP | Create Experiment" />
         {this.renderSteps()}
-        {this.state.loading ? <LoadingSVGCentered /> : null}
         <Prompt message={"Are you sure you want to navigate away?"} />
       </div>
     );

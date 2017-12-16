@@ -22,6 +22,7 @@ import NamespaceStore, {getCurrentNamespace} from 'services/NamespaceStore';
 import MyDataPrepApi from 'api/dataprep';
 import {directiveRequestBodyCreator} from 'components/DataPrep/helper';
 import MLAlgorithmsList from 'components/Experiments/store/MLAlgorithmsList';
+import { Observable } from 'rxjs/Observable';
 
 function setExperimentsLoading() {
   experimentsStore.dispatch({
@@ -139,9 +140,17 @@ function onModelDescriptionChange(e) {
   });
 }
 
-function setModelCreated() {
+function setModelMetadataFilled(isModelMetadataFilled = true) {
   createExperimentStore.dispatch({
-    type: CREATEEXPERIMENTACTIONS.SET_MODEL_CREATED
+    type: CREATEEXPERIMENTACTIONS.SET_MODEL_METADATA_FILLED,
+    payload: { isModelMetadataFilled }
+  });
+  createSplitAndUpdateStatus();
+}
+function setSplitFinalized(isSplitFinalized = true) {
+  createExperimentStore.dispatch({
+    type: CREATEEXPERIMENTACTIONS.SET_SPLIT_FINALIZED,
+    payload: { isSplitFinalized }
   });
 }
 
@@ -159,20 +168,30 @@ function setWorkspace(workspaceId) {
   });
 }
 
-function createExperiment(experiment) {
-  let {selectedNamespace: namespace} = NamespaceStore.getState();
-  return myExperimentsApi.createExperiment({namespace, experimentId: experiment.name}, experiment);
+function updateSchema(fields) {
+  let schema = {
+    name: 'avroSchema',
+    type: 'record',
+    fields
+  };
+  createExperimentStore.dispatch({
+    type: CREATEEXPERIMENTACTIONS.SET_SCHEMA,
+    payload: {schema}
+  });
 }
 
-function createModel(experiment, model) {
-  let {selectedNamespace: namespace} = NamespaceStore.getState();
-  return myExperimentsApi.createModelInExperiment({namespace, experimentId: experiment.name}, model);
+function setSplitDetails(split) {
+  createExperimentStore.dispatch({
+    type: CREATEEXPERIMENTACTIONS.SET_SPLIT_INFO,
+    payload: {split}
+  });
 }
 
-function createExperimentAndModel() {
-  let {experiments_create, model_create} = createExperimentStore.getState();
-  let {selectedNamespace: namespace} = NamespaceStore.getState();
+function createExperiment() {
+  setExperimentLoading();
+  let {model_create} = createExperimentStore.getState();
   let {workspaceId, directives} = model_create;
+  let {experiments_create} = createExperimentStore.getState();
   let requestBody = directiveRequestBodyCreator(directives);
   let experiment = {
     name: experiments_create.name,
@@ -181,23 +200,9 @@ function createExperimentAndModel() {
     srcpath: experiments_create.srcpath,
     workspaceId: model_create.workspaceId
   };
-  setExperimentLoading();
-  let fields;
-
-  let model = {
-    name: model_create.name,
-    description: model_create.description,
-    algorithm: model_create.algorithm.name,
-    hyperparameters: {},
-    split: 'random',
-    directives: model_create.directives,
-    features: model_create.columns.filter(column => column !== experiments_create.outcome)
-  };
-
   MyDataPrepApi
-    .getSchema({ namespace, workspaceId}, requestBody)
+    .getSchema({ namespace: getCurrentNamespace(), workspaceId}, requestBody)
     .mergeMap((schema) => {
-      fields = schema;
       // The outcome will always be simple type. So ["null", "anything"] should give correct outcomeType at the end.
       let outcomeType = schema
         .find(field => field.name === experiment.outcome)
@@ -205,24 +210,94 @@ function createExperimentAndModel() {
         .filter(t => t !== 'null')
         .pop();
       experiment.outcomeType = outcomeType;
-      return createExperiment(experiment);
+      updateSchema(schema);
+      return myExperimentsApi.createExperiment({
+        namespace: getCurrentNamespace(),
+        experimentId: experiment.name
+      }, experiment);
     })
-    .mergeMap(() => {
-      let tempSchema = {
-        name: 'avroSchema',
-        type: 'record',
-        fields
+    .subscribe(setExperimentCreated);
+}
+
+function createSplitAndUpdateStatus() {
+  let {model_create, experiments_create} = createExperimentStore.getState();
+  let {directives, schema} = model_create;
+  let splitInfo = {
+    schema,
+    directives,
+    type: 'random',
+    parameters: { percent: "80"},
+    description: `Default Random split created for model: ${model_create.name}`
+  };
+  myExperimentsApi
+    .createSplit({namespace: getCurrentNamespace(), experimentId: experiments_create.name}, splitInfo)
+    .mergeMap(split => {
+      const s = split;
+      let count = 1;
+      const getStatusOfSplit = (callback, errorCallback, count) => {
+        const params = {
+          namespace: getCurrentNamespace(),
+          experimentId: experiments_create.name,
+          splitId: s.id
+        };
+        myExperimentsApi
+          .getSplitStatus(params)
+          .subscribe(status => {
+            if (status !== 'COMPLETE') {
+              if (count < 120) {
+                count += count;
+                setTimeout(() => {
+                  getStatusOfSplit(callback, errorCallback, count);
+                }, count * 1000);
+              } else {
+                errorCallback();
+              }
+            } else {
+              callback();
+            }
+          });
       };
-      let splitInfo = {
-        schema: tempSchema,
-        directives,
-        type: 'random',
-        parameters: { percent: "80"},
-        description: `Default Random split created for model: ${model_create.name}`
-      };
-      return myExperimentsApi.createSplit({namespace, experimentId: experiments_create.name}, splitInfo);
+      return Observable.create((observer) => {
+        const successCallback = () => {
+          observer.next(s);
+        };
+        const failureCallback = () => {
+          observer.error(`Couldn't create split`);
+        };
+        getStatusOfSplit(successCallback, failureCallback, count);
+      });
     })
-    .mergeMap(({id: split}) => createModel(experiment, {...model, split}))
+    .mergeMap(({id: splitId}) => {
+      return myExperimentsApi
+        .getSplitDetails({
+        namespace: getCurrentNamespace(),
+        experimentId: experiments_create.name,
+        splitId
+      });
+    })
+    .subscribe((split) => {
+      setSplitDetails(split);
+    });
+}
+
+function createModel() {
+  let {experiments_create, model_create} = createExperimentStore.getState();
+  let {split} = model_create;
+  let model = {
+    name: model_create.name,
+    description: model_create.description,
+    algorithm: model_create.algorithm.name,
+    hyperparameters: {},
+    features: model_create.columns.filter(column => column !== experiments_create.outcome)
+  };
+  let experiment = {
+    name: experiments_create.name,
+    description: experiments_create.description,
+    outcome: experiments_create.outcome,
+    srcpath: experiments_create.srcpath,
+    workspaceId: model_create.workspaceId
+  };
+  createModel(experiment, {...model, split})
     .subscribe(() => {
       let {selectedNamespace: namespace} = NamespaceStore.getState();
       window.location.href = `${window.location.origin}/cdap/ns/${namespace}/experiments/${experiment.name}`;
@@ -362,9 +437,11 @@ export {
   setExperimentCreated,
   onModelNameChange,
   onModelDescriptionChange,
-  setModelCreated,
+  setModelMetadataFilled,
   setModelAlgorithm,
-  createExperimentAndModel,
+  createExperiment,
+  createSplitAndUpdateStatus,
+  createModel,
   setSrcPath,
   getExperimentDetails,
   getModelsInExperiment,
@@ -372,6 +449,7 @@ export {
   deleteExperiment,
   getAlgorithmLabel,
   getModelStatus,
-  getExperimentForEdit
+  getExperimentForEdit,
+  setSplitFinalized
 };
 

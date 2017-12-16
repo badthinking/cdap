@@ -21,6 +21,8 @@ import createExperimentStore from 'components/Experiments/store/createExperiment
 import classnames from 'classnames';
 import isNil from 'lodash/isNil';
 
+require('./ExperimentMetadata.scss');
+
 const ExperimentMetadataWrapper = ({modelName, modelDescription, directives, algorithm}) => {
   let isAlgorithmEmpty = () => isNil(algorithm) || !algorithm.length;
   return (
