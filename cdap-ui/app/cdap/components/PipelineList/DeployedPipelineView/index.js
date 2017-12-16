@@ -128,7 +128,7 @@ export default class DeployedPipelineView extends Component {
       pipelineInfo[pipelineName].lastStartTime = runs[0].start;
 
       let running = runs.filter((run) => run.status === 'RUNNING');
-      let status = running.length ? StatusMapper.lookupDisplayStatus('RUNNING') : StatusMapper.lookupDisplayStatus(runs[0].status);
+      let status =  StatusMapper.lookupDisplayStatus(runs[0].status);
 
       pipelineInfo[pipelineName].status = status;
       pipelineInfo[pipelineName].running = running;
