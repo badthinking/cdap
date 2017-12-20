@@ -21,6 +21,10 @@ $margin_adjustment: $arrow_size + 1;
 
 .popper {
   min-width: 170px;
+  padding: 5px 10px;
+  ul {
+    z-index: 1061;
+  }
 }
 .popper,
 .tooltip {
@@ -43,77 +47,54 @@ $margin_adjustment: $arrow_size + 1;
 }
 .popper .popper__arrow,
 .tooltip .tooltip-arrow {
-  width: 0;
-  height: 0;
-  border-style: solid;
   position: absolute;
-  margin: 5px;
+  height: 10px;
+  width: 10px;
+  background: white;
+  z-index: -1;
 }
 
-.tooltip .tooltip-arrow,
-.popper .popper__arrow {
-  border-color: $grey-02;
-}
 .style5 .tooltip .tooltip-arrow {
   border-color: $grey-02;
 }
 .popper[data-placement^="top"],
 .tooltip[data-placement^="top"] {
-  margin-bottom: $margin_adjustment;
+  margin-bottom: 10px;
+  .popper__arrow {
+    border-right: 1px solid $grey-02;
+    border-bottom: 1px solid $grey-02;
+    bottom: -6px;
+    transform: rotate(45deg);
+  }
 }
-.popper[data-placement^="top"] .popper__arrow,
-.tooltip[data-placement^="top"] .tooltip-arrow {
-  border-width: $arrow_size $arrow_size 0 $arrow_size;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  bottom: -($margin_adjustment);
-  left: calc(50% - 5px);
-  margin-top: 0;
-  margin-bottom: 0;
-}
+
 .popper[data-placement^="bottom"],
 .tooltip[data-placement^="bottom"] {
-  margin-top: $margin_adjustment;
+  margin-top: 10px;
+  .popper__arrow {
+    border-right: 1px solid $grey-02;
+    border-bottom: 1px solid $grey-02;
+    top: -6px;
+    transform: rotate(-135deg);
+  }
 }
-.tooltip[data-placement^="bottom"] .tooltip-arrow,
-.popper[data-placement^="bottom"] .popper__arrow {
-  border-width: 0 $arrow_size $arrow_size $arrow_size;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  border-top-color: transparent;
-  top: -($margin_adjustment);
-  left: calc(50% - 5px);
-  margin-top: 0;
-  margin-bottom: 0;
-}
-.tooltip[data-placement^="right"],
-.popper[data-placement^="right"] {
-  margin-left: $margin_adjustment;
-}
-.popper[data-placement^="right"] .popper__arrow,
-.tooltip[data-placement^="right"] .tooltip-arrow {
-  border-width: $arrow_size $arrow_size $arrow_size 0;
-  border-left-color: transparent;
-  border-top-color: transparent;
-  border-bottom-color: transparent;
-  left: -($margin_adjustment);
-  top: calc(50% - 5px);
-  margin-left: 0;
-  margin-right: 0;
+.popper[data-placement^="right"],
+.tooltip[data-placement^="right"] {
+  margin-left: 10px;
+  .popper__arrow {
+    border-right: 1px solid $grey-02;
+    border-bottom: 1px solid $grey-02;
+    left: -6px;
+    transform: rotate(135deg);
+  }
 }
 .popper[data-placement^="left"],
 .tooltip[data-placement^="left"] {
-  margin-right: $margin_adjustment;
-}
-.popper[data-placement^="left"] .popper__arrow,
-.tooltip[data-placement^="left"] .tooltip-arrow {
-  border-width: $arrow_size 0 $arrow_size $arrow_size;
-  border-top-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  right: -($margin_adjustment);
-  top: calc(50% - 5px);
-  margin-left: 0;
-  margin-right: 0;
+  margin-right: 10px;
+  .popper__arrow {
+    border-right: 1px solid $grey-02;
+    border-bottom: 1px solid $grey-02;
+    right: -6px;
+    transform: rotate(-45deg);
+  }
 }

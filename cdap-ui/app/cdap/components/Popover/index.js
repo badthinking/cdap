@@ -17,6 +17,8 @@
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import { Manager, Target, Popper, Arrow } from 'react-popper';
+import {Observable} from 'rxjs/Observable';
+import Mousetrap from 'mousetrap';
 require('./Popover.scss');
 
 export default class Popover extends Component {
@@ -39,7 +41,24 @@ export default class Popover extends Component {
   };
 
   togglePopover = () => {
-    this.setState({showPopover: !this.state.showPopover});
+    let newState = !this.state.showPopover;
+
+    this.setState({
+      showPopover: newState
+    });
+    if (newState) {
+      this.documentClick$ = Observable.fromEvent(document, 'click')
+        .subscribe(() => {
+          this.togglePopover();
+        });
+
+      Mousetrap.bind('esc', this.togglePopover);
+    } else {
+      if (this.documentClick$) {
+        this.documentClick$.unsubscribe();
+      }
+      Mousetrap.unbind('esc');
+    }
   };
 
   showPopoverContent = () => {
