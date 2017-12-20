@@ -19,6 +19,9 @@
 $arrow_size: 7px;
 $margin_adjustment: $arrow_size + 1;
 
+.popper {
+  min-width: 170px;
+}
 .popper,
 .tooltip {
   position: absolute;

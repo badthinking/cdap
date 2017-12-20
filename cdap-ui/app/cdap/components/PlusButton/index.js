@@ -21,7 +21,7 @@ import PlusButtonModal from 'components/PlusButtonModal';
 import {Link} from 'react-router-dom';
 require('./PlusButton.scss');
 
-const PLUSBUTTON_DIMENSION = 52;
+const PLUSBUTTON_DIMENSION = 58;
 
 export default class PlusButton extends Component {
   propTypes = {
@@ -31,6 +31,9 @@ export default class PlusButton extends Component {
       onClick: PropTypes.func
     })),
     mode: PropTypes.oneOf(['marketplace', 'resourcecenter'])
+  };
+  static defaultProps = {
+    contextItems: []
   };
 
   static MODE = {
@@ -42,14 +45,13 @@ export default class PlusButton extends Component {
     showModal: false
   };
 
-  static targetElement = ({onClick = () => {}}) => {
-    console.log('OnClick:  ', onClick);
+  targetElement = ({onClick = () => {}}) => {
     return (
       <img
         id="resource-center-btn"
         className="button-container"
         src="/cdap_assets/img/plus_ico.svg"
-        onClick={onClick}
+        onClick={!this.props.contextItems.length ? this.toggleModal : onClick}
       />
     );
   }
@@ -59,6 +61,9 @@ export default class PlusButton extends Component {
   };
 
   renderResourceCenterMenu = () => {
+    if (!this.props.contextItems.length) {
+      return null;
+    }
     return (
       <ul>
         {
@@ -81,7 +86,7 @@ export default class PlusButton extends Component {
   renderResourceCenter = () => {
     return (
       <Popover
-        target={PlusButton.targetElement}
+        target={this.targetElement}
         targetDimension={{ width: PLUSBUTTON_DIMENSION, height: PLUSBUTTON_DIMENSION }}
         placement='bottom'
       >

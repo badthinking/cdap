@@ -111,6 +111,7 @@ $success_alert_bg_color: $brand-success;
       margin-right: 20px;
       align-items: center;
       justify-content: flex-end;
+      z-index: 2000;
 
       .btn-primary {
         margin: 0 10px;
@@ -119,6 +120,12 @@ $success_alert_bg_color: $brand-success;
         }
       }
 
+      .plus-button {
+        margin: 0px 15px 51px 0;
+        .popper {
+          margin-right: 20px;
+        }
+      }
       .more-dropdown {
         .btn.btn-secondary {
           border: 0;
@@ -187,45 +194,6 @@ $success_alert_bg_color: $brand-success;
         color: $success_alert_color;
         background-color: $success_alert_bg_color;
         padding: 10px 15px;
-      }
-
-      .dataprep-plus-button {
-        position: relative;
-        top: -20px;
-        margin-right: 10px;
-
-        .btn,
-        img {
-          width: 58px;
-          height: 58px;
-          background-color: transparent;
-          border: none;
-          padding: 0;
-        }
-
-        .btn {
-          &:focus,
-          &:active {
-            outline: none;
-          }
-        }
-
-        .plus-button-dropdown {
-          width: 200px;
-          padding: 15px;
-
-          .dropdown-item {
-            padding: 0 0 0 5px;
-            cursor: pointer;
-
-            &:hover { background-color: transparent; }
-            &:focus { outline: none; }
-          }
-
-          hr {
-            border-top: 2px solid #cccccc;
-          }
-        }
       }
     }
   }
