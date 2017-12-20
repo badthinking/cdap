@@ -1,0 +1,50 @@
+/*
+ * Copyright © 2017 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+*/
+
+@import "../../styles/variables.scss";
+
+.plus-button {
+  margin-top: 48px;
+  .popper {
+    width: auto;
+    padding: 0;
+    ul,
+    li {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+      margin: 0;
+    }
+    ul {
+      padding: 0;
+    }
+    li {
+      padding: 8px;
+      &:last-of-type {
+        border-top: 1px solid $grey-03;
+      }
+      &:hover,
+      &:hover a {
+        background: $grey-06;
+        cursor: pointer;
+      }
+      a {
+        text-decoration: none;
+        color: black;
+      }
+    }
+  }
+}
