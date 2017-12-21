@@ -21,9 +21,27 @@ $margin_adjustment: $arrow_size + 1;
 
 .popper {
   min-width: 170px;
-  padding: 5px 10px;
   ul {
     z-index: 1061;
+    list-style: none;
+    text-align: left;
+    margin: 0;
+    padding: 5px;
+    li {
+      border-radius: 4px;
+      padding: 8px;
+      &:hover {
+        background: $grey-08;
+        cursor: pointer;
+      }
+      a,
+      .btn,
+      a:hover,
+      &.btn:hover{
+        text-decoration: none;
+        color: black;
+      }
+    }
   }
 }
 .popper,
@@ -34,7 +52,7 @@ $margin_adjustment: $arrow_size + 1;
   width: 150px;
   border-radius: 3px;
   box-shadow: 0 0 2px $grey-02;
-  padding: 10px;
+  padding: 0;
   text-align: center;
 }
 .style5 .tooltip {

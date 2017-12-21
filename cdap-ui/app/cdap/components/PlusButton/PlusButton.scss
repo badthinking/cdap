@@ -23,18 +23,9 @@
     width: auto;
     padding: 0;
     margin-right: 20px;
-    ul,
-    li {
-      list-style: none;
-      padding: 0;
-      text-align: left;
-      margin: 0;
-    }
-    ul {
-      padding: 0;
-    }
     li {
       padding: 8px;
+      margin: 0;
       border-radius: 4px;
       &:last-of-type {
         border-top: 1px solid $grey-04;

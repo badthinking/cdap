@@ -27,6 +27,7 @@ export default class Popover extends Component {
     children: PropTypes.ReactElement,
     target: PropTypes.ReactElement,
     targetDimension: PropTypes.object.isRequired,
+    className: PropTypes.string,
     placement: PropTypes.oneOf([
       'top',
       'bottom',
@@ -76,7 +77,7 @@ export default class Popover extends Component {
   render() {
     const TargetElement = this.props.target;
     return (
-      <Manager>
+      <Manager className={this.props.className}>
         <Target style={this.props.targetDimension} onClick={this.togglePopover}>
           <TargetElement />
         </Target>
