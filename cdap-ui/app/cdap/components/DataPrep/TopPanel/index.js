@@ -392,7 +392,7 @@ export default class DataPrepTopPanel extends Component {
               null
           }
           {this.renderMenu()}
-          <DataPrepPlusButton />
+          {!this.props.singleWorkspaceMode ? <DataPrepPlusButton /> : null }
           {this.renderAddToPipelineModal()}
           {this.renderSchemaModal()}
         </div>
