@@ -19,6 +19,7 @@ import React, {Component} from 'react';
 import { Manager, Target, Popper, Arrow } from 'react-popper';
 import {Observable} from 'rxjs/Observable';
 import Mousetrap from 'mousetrap';
+import classnames from 'classnames';
 require('./Popover.scss');
 
 export default class Popover extends Component {
@@ -62,18 +63,6 @@ export default class Popover extends Component {
     }
   };
 
-  showPopoverContent = () => {
-    if (this.state.showPopover) {
-      return (
-        <Popper placement={this.props.placement || 'auto'} className="popper">
-          {this.props.children}
-          <Arrow className="popper__arrow"/>
-        </Popper>
-      );
-    }
-    return null;
-  };
-
   render() {
     const TargetElement = this.props.target;
     return (
@@ -81,7 +70,15 @@ export default class Popover extends Component {
         <Target style={this.props.targetDimension} onClick={this.togglePopover}>
           <TargetElement />
         </Target>
-        {this.showPopoverContent()}
+        <Popper
+          placement={this.props.placement || 'auto'}
+          className={classnames("popper", {
+          'hide': !this.state.showPopover
+          })}
+        >
+          {this.props.children}
+          <Arrow className="popper__arrow"/>
+        </Popper>
       </Manager>
     );
   }

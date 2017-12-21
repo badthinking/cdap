@@ -21,6 +21,9 @@ $margin_adjustment: $arrow_size + 1;
 
 .popper {
   min-width: 170px;
+  &.hide {
+    display: none;
+  }
   ul {
     z-index: 1061;
     list-style: none;
@@ -37,7 +40,7 @@ $margin_adjustment: $arrow_size + 1;
       a,
       .btn,
       a:hover,
-      &.btn:hover{
+      &.btn:hover {
         text-decoration: none;
         color: black;
       }
