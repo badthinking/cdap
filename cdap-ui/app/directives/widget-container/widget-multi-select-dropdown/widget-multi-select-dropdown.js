@@ -57,9 +57,12 @@ angular.module(PKG.name + '.commons')
             });
         } else {
           let defaultOption;
-          defaultOption = $scope.options.find(op => op.id === defaultValue);
-          if (defaultOption) {
-            $scope.selectedOptions.push(defaultOption);
+          defaultOption = defaultValue
+            .map(value => $scope.options.find(op => op.id === value))
+            .filter(value => value);
+
+          if (defaultOption.length) {
+            $scope.selectedOptions = $scope.selectedOptions.concat(defaultOption);
           }
         }
         $scope.$watch('selectedOptions', function() {
