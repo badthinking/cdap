@@ -27,18 +27,41 @@ angular.module(PKG.name + '.commons')
       controller: function($scope, myHelpers) {
         $scope.extraSettings = {
           externalProp: '',
-          closeOnBlur: false,
           checkBoxes: true
         };
         $scope.selectedOptions = [];
+        $scope.delimiter = myHelpers.objectQuery($scope.config, 'widget-attributes', 'delimiter') || ',';
         $scope.options = myHelpers.objectQuery($scope.config, 'widget-attributes', 'options') || [];
         $scope.options = $scope.options.map(option => {
           return {
-            id: option,
-            label: option
+            id: option.id,
+            label: option.label || option.id
           };
         });
-        $scope.delimiter = myHelpers.objectQuery($scope.config, 'widget-attributes', 'delimiter') || ',';
+        let defaultValue = myHelpers.objectQuery($scope.config, 'widget-attributes', 'defaultValue') || [];
+        if ($scope.model) {
+          $scope.model
+            .split($scope.delimiter)
+            .forEach(value => {
+              let valueInOption = $scope.options.find(op => op.id === value);
+              if (valueInOption) {
+                $scope.selectedOptions.push(valueInOption);
+              } else {
+                let unknownValue = {
+                  id: value,
+                  label: 'UnKnown Value (' + value + '). Not part of options'
+                };
+                $scope.options.push(unknownValue);
+                $scope.selectedOptions.push(unknownValue);
+              }
+            });
+        } else {
+          let defaultOption;
+          defaultOption = $scope.options.find(op => op.id === defaultValue);
+          if (defaultOption) {
+            $scope.selectedOptions.push(defaultOption);
+          }
+        }
         $scope.$watch('selectedOptions', function() {
           $scope.model = $scope.selectedOptions.map(o => o.id). join($scope.delimiter);
         }, true);
