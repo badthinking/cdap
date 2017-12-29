@@ -22,8 +22,7 @@ import T from 'i18n-react';
 import orderBy from 'lodash/orderBy';
 import IconSVG from 'components/IconSVG';
 import StatusMapper from 'services/StatusMapper';
-import NextRun from 'components/PipelineList/DeployedPipelineView/NextRun';
-import Duration from 'components/Duration';
+import PipelineTable from 'components/PipelineList/DeployedPipelineView/PipelineTable';
 
 require('./DeployedPipelineView.scss');
 
@@ -103,7 +102,8 @@ export default class DeployedPipelineView extends Component {
         pipelineInfo[pipeline.name] = {
           name: pipeline.name,
           type: T.translate(`${PREFIX}.${pipeline.artifact.name}`),
-          runs: []
+          runs: [],
+          running: []
         };
       }
 
@@ -134,79 +134,21 @@ export default class DeployedPipelineView extends Component {
       pipelineInfo[pipelineName].running = running;
     });
 
-    console.log('check', pipelineInfo);
     this.setState({
       pipelineList,
       pipelineInfo
     });
   }
 
-  renderTable() {
-    return (
-      <div className="pipeline-list-table">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Pipeline Name</th>
-              <th>Type</th>
-              <th>Version</th>
-              <th>Total Runs Completed</th>
-              <th>Last Start Time</th>
-              <th>Next Run Starts</th>
-              <th></th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {
-              this.state.pipelineList.map((pipelineName) => {
-                let pipelineInfo = this.state.pipelineInfo[pipelineName];
-                let statusClassName = StatusMapper.getStatusIndicatorClass(pipelineInfo.status);
-
-                return (
-                  <tr key={pipelineName}>
-                    <td className="status">
-                      <span className={`fa fa-fw ${statusClassName}`}>
-                        <IconSVG name="icon-circle" />
-                      </span>
-                      <span className="text">
-                        {pipelineInfo.status}
-                      </span>
-                    </td>
-                    <td>{pipelineInfo.name}</td>
-                    <td>{pipelineInfo.type}</td>
-                    <td>{pipelineInfo.version}</td>
-                    <td>{pipelineInfo.runs.length}</td>
-                    <td>
-                      <Duration
-                        targetTime={pipelineInfo.lastStartTime}
-                        isMillisecond={false}
-                      />
-                    </td>
-                    <td>
-                      <NextRun pipelineInfo={pipelineInfo} />
-                    </td>
-                    <td>Actions</td>
-                  </tr>
-                );
-              })
-            }
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
   render() {
     return (
       <div className="pipeline-deployed-view">
         <div className="deployed-header">
-          <div className="pipeline-count d-inline-block">
+          <div className="pipeline-count">
             {this.state.pipelineList.length} Pipelines
           </div>
 
-          <div className="search-box d-inline-block">
+          <div className="search-box">
             <div className="input-group">
               <span className="input-group-addon">
                 <IconSVG name="icon-search" />
@@ -220,7 +162,10 @@ export default class DeployedPipelineView extends Component {
           </div>
         </div>
 
-        {this.renderTable()}
+        <PipelineTable
+          pipelineList={this.state.pipelineList}
+          pipelineInfo={this.state.pipelineInfo}
+        />
       </div>
     );
   }

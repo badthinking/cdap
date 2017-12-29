@@ -17,6 +17,7 @@
 import React, { Component } from 'react';
 import classnames from 'classnames';
 import DeployedPipelineView from 'components/PipelineList/DeployedPipelineView';
+import ResourceCenterButton from 'components/ResourceCenterButton';
 
 require('./PipelineList.scss');
 
@@ -54,22 +55,22 @@ export default class PipelineList extends Component {
     return (
       <div className="pipeline-list">
         <div className="view-header">
-          <h2>
-            <span
-              className={classnames('option', {'active': this.state.activeView === VIEWS.deployed})}
-              onClick={this.changeView.bind(this, VIEWS.deployed)}
-            >
-              Deployed
-            </span>
-            <span className="separator">|</span>
-            <span
-              className={classnames('option', {'active': this.state.activeView === VIEWS.draft})}
-              onClick={this.changeView.bind(this, VIEWS.draft)}
-            >
-              Draft
-            </span>
-          </h2>
+          <span
+            className={classnames('option', {'active': this.state.activeView === VIEWS.deployed})}
+            onClick={this.changeView.bind(this, VIEWS.deployed)}
+          >
+            Deployed
+          </span>
+          <span className="separator">|</span>
+          <span
+            className={classnames('option', {'active': this.state.activeView === VIEWS.draft})}
+            onClick={this.changeView.bind(this, VIEWS.draft)}
+          >
+            Draft
+          </span>
         </div>
+
+        <ResourceCenterButton />
 
         {this.renderContent()}
       </div>
