@@ -53,7 +53,7 @@ $action-width: 45px;
   }
 
   .running-pipelines {
-    padding: 0 $toggle-width + $action-width;
+    padding: 0 $action-width 0 $toggle-width;
 
     thead {
       background-color: $grey-05;
