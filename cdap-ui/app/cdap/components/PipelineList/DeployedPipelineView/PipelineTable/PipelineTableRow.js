@@ -59,7 +59,7 @@ export default class PipelineTableRow extends Component {
   renderRunningPipeline() {
     if (!this.state.expanded) { return null; }
 
-    let running = this.props.pipelineInfo.running;
+    let pipelineInfo = this.props.pipelineInfo;
 
     return (
       <div className="running-pipelines">
@@ -71,17 +71,32 @@ export default class PipelineTableRow extends Component {
 
           <tbody>
             {
-              running.map((run) => {
+              pipelineInfo.running.map((run) => {
+                let namespace = NamespaceStore.getState().selectedNamespace;
+
+                let link = window.getHydratorUrl({
+                  stateName: 'hydrator.detail',
+                  stateParams: {
+                    namespace,
+                    pipelineId: pipelineInfo.name,
+                    runid: run.runid
+                  }
+                });
+
                 return (
                   <tr key={run.runid}>
                     <td>
-                      {humanReadableDate(run.start)}
+                      <a href={link}>
+                        {humanReadableDate(run.start)}
+                      </a>
                     </td>
                     <td>
-                      <Duration
-                        targetTime={run.start}
-                        isMillisecond={false}
-                      />
+                      <a href={link}>
+                        <Duration
+                          targetTime={run.start}
+                          isMillisecond={false}
+                        />
+                      </a>
                     </td>
                   </tr>
                 );

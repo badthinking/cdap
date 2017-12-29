@@ -67,6 +67,10 @@ $action-width: 45px;
     .table {
       margin-top: 0;
       margin-bottom: 0;
+
+      tbody td > a {
+        color: inherit;
+      }
     }
 
     thead {
