@@ -50,10 +50,24 @@ $action-width: 45px;
 
   .table-row-container {
     border-bottom: $table-border;
+
+    &.expanded {
+      background-color: $row-hover-color;
+
+      .table-row:hover .pipeline-run,
+      .pipeline-run {
+        color: $orange-01;
+      }
+    }
   }
 
   .running-pipelines {
-    padding: 0 $action-width 0 $toggle-width;
+    padding: 0 $action-width 10px $toggle-width;
+
+    .table {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
 
     thead {
       background-color: $grey-05;

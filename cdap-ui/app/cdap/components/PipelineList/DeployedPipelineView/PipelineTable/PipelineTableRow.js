@@ -109,7 +109,9 @@ export default class PipelineTableRow extends Component {
     });
 
     return (
-      <div className="table-row-container">
+      <div className={classnames('table-row-container', {
+        expanded: this.state.expanded
+      })}>
         <div className="table-row">
           <div
             className={classnames('table-column toggle-expand-column text-xs-center', {
@@ -137,6 +139,8 @@ export default class PipelineTableRow extends Component {
                 (
                   <div className="pipeline-run">
                     {pipelineInfo.running.length} Running
+
+                    {this.state.expanded ? ' - Select one to view' : null}
                   </div>
                 )
             }
