@@ -68,6 +68,10 @@ $action-width: 45px;
       margin-top: 0;
       margin-bottom: 0;
 
+      th {
+        font-size: 13px;
+      }
+
       tbody td > a {
         color: inherit;
       }
