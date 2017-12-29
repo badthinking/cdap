@@ -142,7 +142,7 @@ export default class DeployedPipelineView extends Component {
 
   render() {
     return (
-      <div className="pipeline-deployed-view">
+      <div className="pipeline-deployed-view pipeline-list-content">
         <div className="deployed-header">
           <div className="pipeline-count">
             {this.state.pipelineList.length} Pipelines

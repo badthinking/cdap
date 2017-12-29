@@ -24,6 +24,12 @@ $view-header-bg-color: white;
 
   .cask-resourcecenter-button { top: 75px; }
 
+  .pipeline-list-content {
+    height: calc(100% - #{$pipeline-view-header});
+    overflow: auto;
+    padding-bottom: 10px;
+  }
+
   .view-header {
     background-color: $view-header-bg-color;
     height: $pipeline-view-header;
